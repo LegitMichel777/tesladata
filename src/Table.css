@@ -1,0 +1,96 @@
+.tableHeaderItemUnhighlighted {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.tableHeaderItemHighlighted {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+#MainTable {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 18px;
+}
+
+td {
+    font-weight: 500;
+    font-size: 17px;
+}
+
+.TableRow, #TableHeader, #TableShadow {
+    height: 44px;
+}
+
+#TableHeader {
+    background-color: #E5E5E5;
+    width: 100%;
+    text-align: left;
+}
+
+tr th:first-child {
+    -moz-border-radius-topleft: 18px;
+    -moz-border-radius-bottomleft: 18px;
+    -webkit-border-top-left-radius: 18px;
+    -webkit-border-bottom-left-radius: 18px;
+    padding-left: 27px;
+}
+.TableRow td:first-child, tr th:first-child {
+    padding-left: 27px;
+}
+
+tr th:last-child {
+    -moz-border-radius-topright: 18px;
+    -moz-border-radius-bottomright: 18px;
+    -webkit-border-top-right-radius: 18px;
+    -webkit-border-bottom-right-radius: 18px;
+}
+.TableRow td:last-child, tr th:last-child {
+    padding-right: 27px;
+}
+
+#tableContainer {
+    border-radius: 18px;
+    width: 100%;
+    background-color: #EFEFEF;
+    margin-top: 20px;
+    position: relative;
+}
+#TableShadow {
+    width: 100%;
+    position: absolute;
+    z-index:5000;
+    box-shadow: 0 2px 2px #BCBCBC;
+    border-radius: 18px;
+    pointer-events: none;
+}
+
+.tdTableSeparator {
+    background-color: #BABABA;
+    width: 100%;
+    height: 1px;
+}
+.tdTableSeparatorHead {
+    background-color: #BABABA;
+    width: 4px;
+    height: 1px;
+    float: right;
+}
+td {
+    padding:0;
+}
+
+.tableHeaderItemHighlighted, .tableHeaderItemUnhighlighted {
+    display: flex;
+    align-items: center;
+}
+
+.tableHeaderSort {
+    width: 21px;
+    height: 21px;
+    padding-left: 10px;
+}
+.tableHeaderHidden {
+    opacity: 0;
+}

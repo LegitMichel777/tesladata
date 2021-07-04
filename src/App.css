@@ -23,6 +23,7 @@
 .segmentedControlOptionSelected {
     background-color: #CECECE;
     box-shadow: 0 0 3px #7F7F7F;
+    z-index: 5;
 }
 .segmentedControlOptionDeselected:hover {
     background-color: #D7D7D7;
@@ -124,22 +125,4 @@
 #plusIcon {
     width: 30px;
     height: 30px;
-}
-
-th {
-    font-size: 18px;
-    font-weight: 600;
-}
-
-#MainTable {
-    width: 100%;
-    margin-top: 20px;
-    border-collapse: collapse;
-}
-
-#TableHeader {
-    background-color: #E5E5E5;
-    height: 44px;
-    width: 100%;
-    text-align: left;
 }
