@@ -2,7 +2,7 @@ import React from "react";
 import {TableSeparator} from './TableSeparator'
 import {getDisplayName, getIcon} from '../utils'
 
-export class TableHeaderItem extends React.Component {
+class TableHeaderItem extends React.Component {
     render() {
         // parameters: what to display, my id, the currently being sorted id, which way its being sorted
         let iAmSort=this.props.myId===this.props.curSortId;
@@ -23,12 +23,12 @@ export class TableHeaderItem extends React.Component {
     }
 }
 
-export class TableHeader extends React.Component {
+class TableHeader extends React.Component {
     render() {
         let headerData=this.props.headerData.describe();
         headerData.unshift("#");
         let headerDataIds=this.props.headerData.getIds();
-        headerDataIds.unshift("Num");
+        headerDataIds.unshift("num");
         let children=Array(headerData.length + 3);
         for (let i=0;i<headerData.length;i++) {
             children[i]=React.createElement(TableHeaderItem, {displayItem: headerData[i], myId: headerDataIds[i], curSortId: this.props.sortedColumn, curSortMode: this.props.sortMethodAscending, key: "HeaderItem"+headerDataIds[i], setSortMethod: this.props.setSortMethod}, null)
@@ -39,7 +39,7 @@ export class TableHeader extends React.Component {
     }
 }
 
-export class TableRow extends React.Component {
+class TableRow extends React.Component {
     render() {
         let rowData=this.props.rowData;
         let children=Array(rowData.length+3);
@@ -61,7 +61,7 @@ export class MainTable extends React.Component {
             let tableMultiples = tableData[0].getData().length;
             let tableIds = tableData[0].getIds();
             for (let i = 0; i < tableData.length; i++) {
-                tableElements[2 * i] = <TableRow rowIds={tableIds} rowData={tableData[i].getData()} rowNumber={i + 1}
+                tableElements[2 * i] = <TableRow rowIds={tableIds} rowData={tableData[i].getData()} rowNumber={tableData[i].num}
                                                  key={"tableRow" + tableData[i].dbid}/>;
                 if (i !== tableData.length - 1) {
                     tableElements[2 * i + 1] =

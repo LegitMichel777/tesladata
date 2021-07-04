@@ -1,0 +1,114 @@
+#addCircle {
+    width:46px;
+    height:46px;
+    border-radius: 50%;
+    background-color: #E4E4E4;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#addCircle:hover {
+    background-color: #DADADA;
+}
+#plusIcon {
+    width: 30px;
+    height: 30px;
+}
+.topSegEqual {
+    width: 100%;
+}
+#mainSearchField {
+    width: 100%;
+    background-color: #E4E4E4;
+    height: 46px;
+    border-radius: 23px;
+    display: flex;
+    align-items: center;
+}
+#searchIcon {
+    height: 26px;
+    padding-left: 16px;
+    padding-right: 7px;
+}
+.beautiful-textfield {
+    outline: none;
+    background: transparent;
+    border:none;
+    font-size: 17px;
+    font-weight: 500;
+    margin: 0;
+    width: 100%;
+    padding: 0 18px 0 0;
+}
+#mainSegmentedControl {
+    display: flex;
+    height: 46px;
+    background-color: #E4E4E4;
+    border-radius: 23px;
+    align-items: center;
+    justify-content: center;
+    margin: 0 34px 0 34px;
+    padding: 0 4px 0 4px;
+}
+
+.segmentedControlIcon {
+    height: 26px;
+}
+.segmentedControlOption {
+    width: 104px;
+    height: 40px;
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+}
+.segmentedControlOptionSelected {
+    background-color: #CECECE;
+    box-shadow: 0 0 3px #7F7F7F;
+    z-index: 5;
+}
+.segmentedControlOptionDeselected:hover {
+    background-color: #D7D7D7;
+}
+.segmentedItemSelected {
+
+}
+.segmentedItemDeselected {
+    opacity: 0.35;
+}
+.segmentedItemDeselected:hover {
+    opacity: 0.5;
+}
+.segmentedControlImageWrapper {
+    width:100%;
+    height:100%;
+    display:flex;
+    align-items: center;
+    justify-content: center;
+}
+#topMenu {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    margin-top: 15px;
+}
+#topMenuSelectedDisplay {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    font-weight: bold;
+    font-size: 24px;
+    padding-top: 9px;
+}
+#topMenuContainer {
+    width: 100%;
+}
+#innerAddCircle {
+    height: 30px;
+    width: 30px;
+}
+#topMenuMainSection {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-basis: auto;
+}

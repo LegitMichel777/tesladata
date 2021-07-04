@@ -4,7 +4,7 @@ import {componentsData, failsData, modesData} from "./DataStructs";
 import {MainTable} from './Table/Table'
 import React from "react";
 import './Table/Table'
-import {getDisplayName, getIcon} from './utils'
+import {TopMenu} from './TopMenu/TopMenu'
 
 let mockCompData=[new componentsData(2, "why", "123", "are", "you", "42"), new componentsData(3, "i", "want", "everyone", "to", "43")];
 let mockFailData=[new failsData(2, "", "Device", "", "Melted", "MELT"), new failsData(3, "", "Box", "", "Collapsed", "COLLPSE")];
@@ -19,16 +19,16 @@ class App extends React.Component {
         this.state = {
             currentSelectedMenuItem: "failures",
             sortedColumn: {
-                components: "Num",
-                failures: "Num",
-                modes: "Num"
+                components: "num",
+                failures: "num",
+                modes: "num"
             },
             sortMethodAscending: {
                 components: true,
                 failures: true,
                 modes: true
             },
-            displayData: this.recomputeData("failures")
+            displayData: this.recomputeData("failures", "num", true)
         };
     }
     changeCurrentSelectedMenuItem = (val) => {
@@ -37,23 +37,60 @@ class App extends React.Component {
             displayData: this.recomputeData(val)
         });
     };
-    recomputeData(selectedState=this.state.currentSelectedMenuItem) {
+    recomputeData(selectedState=this.state.currentSelectedMenuItem, sortedColumn=null, sortMethodAscending=null) {
+        if (sortedColumn === null) {
+            sortedColumn = this.state.sortedColumn[selectedState];
+        }
+        if (sortMethodAscending === null) {
+            sortMethodAscending = this.state.sortMethodAscending[selectedState];
+        }
         console.log("Recomputing display data");
-        let displayData=[];
-        switch(selectedState) {
+        let displayData = [];
+        switch (selectedState) {
             case "components":
-                displayData=this.rawComponentsData;
+                displayData = this.rawComponentsData.slice();
                 break;
             case "failures":
-                displayData=this.rawFailsData;
+                displayData = this.rawFailsData.slice();
                 break;
             case "modes":
-                displayData=this.rawModesData;
+                displayData = this.rawModesData.slice();
                 break;
             default:
-                console.log("Unknown selected state ("+selectedState+")")
+                console.log("Unknown selected state (" + selectedState + ")")
         }
-        console.log(displayData);
+        for (let i = 0; i < displayData.length; i++) {
+            displayData[i].num = i + 1;
+        }
+        if (displayData.length > 0) {
+            if (sortedColumn === "num") {
+                if (!sortMethodAscending) {
+                    displayData.reverse();
+                }
+            } else {
+                let elementsDescription=displayData[0].getIds();
+                let sortBy=-1;
+                for (let i=0;i<elementsDescription.length;i++) {
+                    if (elementsDescription[i]===sortedColumn) {
+                        sortBy=i;
+                    }
+                }
+                if (sortBy===-1) {
+                    console.log("Cannot find sort column ID "+sortedColumn);
+                    return displayData;
+                }
+                displayData.sort((a, b) => {
+                    let aData=a.getData();
+                    let bData=b.getData();
+                    let aComp=aData[sortBy];
+                    let bComp=bData[sortBy];
+                    if (sortMethodAscending) {
+                        return aComp>bComp;
+                    }
+                    return aComp<bComp;
+                })
+            }
+        }
         return displayData;
     }
     render() {
@@ -74,80 +111,9 @@ class App extends React.Component {
                                 failures: (this.state.currentSelectedMenuItem === "failures" ? ascending : this.state.sortedColumn['failures']),
                                 modes: (this.state.currentSelectedMenuItem === "modes" ? ascending : this.state.sortedColumn['modes'])
                             },
-                            displayData: this.recomputeData()
+                            displayData: this.recomputeData(this.state.currentSelectedMenuItem, method, ascending)
                         });
                     }}/>
-                </div>
-            </div>
-        );
-    }
-}
-
-class TopMenu extends React.Component {
-    constructor(props) {
-        super(props);
-    }
-    handleMenuPress(menuItem) {
-        this.props.setSelectedMenuItem(menuItem);
-    }
-    render() {
-        return (
-            <div id="topMenu">
-                <div id="topMenuMainSection">
-                    <div className="topSegEqual">
-                        <AddButton />
-                    </div>
-                    <div id="mainSegmentedControl">
-                        <MenuItem currentSelectedMenuItem={this.props.currentSelectedMenuItem} myMenuItem={"components"}
-                                  onClick={() => this.handleMenuPress("components")}/>
-                        <MenuItem currentSelectedMenuItem={this.props.currentSelectedMenuItem} myMenuItem={"failures"}
-                                  onClick={() => this.handleMenuPress("failures")}/>
-                        <MenuItem currentSelectedMenuItem={this.props.currentSelectedMenuItem} myMenuItem={"modes"}
-                                  onClick={() => this.handleMenuPress("modes")}/>
-                    </div>
-                    <div className="topSegEqual">
-                        <SearchField currentSelectedMenuItem={this.props.currentSelectedMenuItem}/>
-                    </div>
-                </div>
-                <div id="topMenuSelectedDisplay">
-                    { getDisplayName(this.props.currentSelectedMenuItem) }
-                </div>
-            </div>
-        );
-    }
-}
-
-class SearchField extends React.Component {
-    render() {
-        return (
-            <div id="mainSearchField">
-                <img id="searchIcon" src={ getIcon("search") } alt={"Search Icon"}/>
-                <input type="text" className="beautiful-textfield" placeholder={"Search "+getDisplayName(this.props.currentSelectedMenuItem)}/>
-            </div>
-        )
-    }
-}
-
-class AddButton extends React.Component {
-    render() {
-        return (
-            <div id="addCircle">
-                <div id="innerAddCircle">
-                    <img id="plusIcon" src={ getIcon("plus") } alt={"Plus Icon"}/>
-                </div>
-            </div>
-        )
-    }
-}
-
-class MenuItem extends React.Component {
-
-    render() {
-        const myItemSelected = this.props.myMenuItem === this.props.currentSelectedMenuItem;
-        return (
-            <div className={"segmentedControlOption segmentedControlOption" + (myItemSelected ? "Selected":"Deselected")} onClick={ this.props.onClick }>
-                <div className={"segmentedControlImageWrapper "+(myItemSelected ? "segmentedItemSelected" : "segmentedItemDeselected")}>
-                    <img className={ "segmentedControlIcon" } src={ getIcon(this.props.myMenuItem) }/>
                 </div>
             </div>
         );
