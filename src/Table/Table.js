@@ -33,8 +33,6 @@ class TableHeader extends React.Component {
         for (let i=0;i<headerData.length;i++) {
             children[i]=React.createElement(TableHeaderItem, {displayItem: headerData[i], myId: headerDataIds[i], curSortId: this.props.sortedColumn, curSortMode: this.props.sortMethodAscending, key: "HeaderItem"+headerDataIds[i], setSortMethod: this.props.setSortMethod}, null)
         }
-        children[headerData.length+1]=<th key={"HeaderItemEditPlaceholder"}/>;
-        children[headerData.length+2]=<th key={"HeaderItemDeletePlaceholder"}/>;
         return React.createElement('tr', {id: 'TableHeader'}, children);
     }
 }
@@ -43,13 +41,26 @@ class TableRow extends React.Component {
     render() {
         let rowData=this.props.rowData;
         let children=Array(rowData.length+3);
-        children[0]=<td key={"num"}>{this.props.rowNumber}</td>;
+        children[0]=<td key={"num"} className={(this.props.rowHighlighted ? "TableRowHighlighted" : "")}>{this.props.rowNumber}</td>;
         for (let i=1;i<=rowData.length;i++) {
-            children[i]=React.createElement('td', {key: this.props.rowIds[i-1]}, rowData[i-1]);
+            children[i]=React.createElement('td', {key: this.props.rowIds[i-1], className: (this.props.rowHighlighted ? "TableRowHighlighted" : "")}, rowData[i-1]);
         }
-        children[rowData.length+1]=<td key={"edit"}>Edit</td>;
-        children[rowData.length+2]=<td key={"delete"}>Delete</td>;
-        return React.createElement('tr', {className: 'TableRow'}, children);
+        return <tr className={'TableRow'} onClick={(e) => {
+            let typeOfAction="single";
+            if (e.shiftKey) {
+                typeOfAction="range";
+            } else {
+                if (e.metaKey || e.altKey) {
+                    typeOfAction="multi";
+                }
+            }
+            this.props.processClick(this.props.rowSelectIdentifier, typeOfAction);
+        }}>
+            {children}
+        </tr>;
+        /*
+        There are two parts to a rowSelectIdentifier. The type of table (Components, Failures, Modes, etc.) and the dbid (primary key)
+         */
     }
 }
 
@@ -61,8 +72,17 @@ export class MainTable extends React.Component {
             let tableMultiples = tableData[0].getData().length;
             let tableIds = tableData[0].getIds();
             for (let i = 0; i < tableData.length; i++) {
-                tableElements[2 * i] = <TableRow rowIds={tableIds} rowData={tableData[i].getData()} rowNumber={tableData[i].num}
-                                                 key={"tableRow" + tableData[i].dbid}/>;
+                tableElements[2 * i] =
+                    <TableRow rowIds={tableIds} rowData={tableData[i].getData()} rowNumber={tableData[i].num}
+                                                 key={"tableRow" + this.props.tableType + tableData[i].dbid}
+                                                 rowHighlighted={this.props.highlightData[i]}
+                              rowSelectIdentifier={{
+                                  tableType: this.props.tableType,
+                                  tableIndex: i
+                              }
+                              }
+                              processClick={this.props.processClick}
+                />;
                 if (i !== tableData.length - 1) {
                     tableElements[2 * i + 1] =
                         <TableSeparator multiples={tableMultiples + 3} key={"tableSeparator" + tableData[i].dbid}/>

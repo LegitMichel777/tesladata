@@ -14,17 +14,12 @@
     border-radius: 18px;
 }
 
-td {
-    font-weight: 500;
-    font-size: 17px;
-}
-
 .TableRow, #TableHeader, #TableShadow {
     height: 44px;
 }
 
 #TableHeader {
-    background-color: #E5E5E5;
+    background-color: var(--tableHeader);
     width: 100%;
     text-align: left;
 }
@@ -46,14 +41,32 @@ tr th:last-child {
     -webkit-border-top-right-radius: 18px;
     -webkit-border-bottom-right-radius: 18px;
 }
+tr:last-child td:first-child {
+    -moz-border-radius-bottomleft: 18px;
+    -webkit-border-bottom-left-radius: 18px;
+}
+tr:last-child td:last-child {
+    -moz-border-radius-bottomright: 18px;
+    -webkit-border-bottom-right-radius: 18px;
+}
+tr:first-child td:first-child {
+    -moz-border-radius-topleft: 18px;
+    -webkit-border-top-left-radius: 18px;
+}
+tr:first-child td:last-child {
+    -moz-border-radius-topright: 18px;
+    -webkit-border-top-right-radius: 18px;
+}
 .TableRow td:last-child, tr th:last-child {
     padding-right: 27px;
 }
-
+.TableRowHighlighted {
+    background-color: var(--table-row-select);
+}
 #tableContainer {
     border-radius: 18px;
     width: 100%;
-    background-color: #EFEFEF;
+    background-color: var(--table);
     margin-top: 20px;
     position: relative;
 }
@@ -61,24 +74,31 @@ tr th:last-child {
     width: 100%;
     position: absolute;
     z-index:5000;
-    box-shadow: 0 2px 2px #BCBCBC;
+    box-shadow: 0 2px 2px var(--tableHeaderShadow);
     border-radius: 18px;
     pointer-events: none;
 }
 
 .tdTableSeparator {
-    background-color: #BABABA;
+    background-color: var(--separator);
     width: 100%;
     height: 1px;
 }
 .tdTableSeparatorHead {
-    background-color: #BABABA;
+    background-color: var(--separator);
     width: 4px;
     height: 1px;
     float: right;
 }
 td {
+    color: var(--text);
     padding:0;
+    font-weight: 500;
+    font-size: 17px;
+}
+
+th {
+    color: var(--text);
 }
 
 .tableHeaderItemHighlighted, .tableHeaderItemUnhighlighted {
@@ -99,4 +119,5 @@ td {
     margin-top:20px;
     font-size: 18px;
     font-weight: 700;
+    color: var(--text);
 }

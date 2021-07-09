@@ -13,12 +13,12 @@ class SearchField extends React.Component {
     }
 }
 
-class AddButton extends React.Component {
+class TopMenuButton extends React.Component {
     render() {
         return (
-            <div id="addCircle">
-                <div id="innerAddCircle">
-                    <img id="plusIcon" src={ getIcon("plus") } alt={"Plus Icon"}/>
+            <div className={"topMenuButtonCircle "+(this.props.disabled ? "topMenuButtonCircleDisabled" : "topMenuButtonCircleEnabled")}>
+                <div className="topMenuButtonInnerCircle">
+                    <img className={"topMenuButtonIcon"+(this.props.disabled ? " topMenuButtonIconDisabled" : "")} id={this.props.imgId} src={ getIcon(this.props.iconName) } alt={this.props.alt} />
                 </div>
             </div>
         )
@@ -50,8 +50,10 @@ export class TopMenu extends React.Component {
         return (
             <div id="topMenu">
                 <div id="topMenuMainSection">
-                    <div className="topSegEqual">
-                        <AddButton />
+                    <div className="topSegEqual" id={"buttonsBar"}>
+                        <TopMenuButton iconName={"edit"} alt={"Edit"} imgId={"editIcon"} disabled={true}/>
+                        <TopMenuButton iconName={"delete"} alt={"Delete"} imgId={"deleteIcon"} disabled={true}/>
+                        <TopMenuButton iconName={"plus"} alt={"Add"} imgId={"plusIcon"} />
                     </div>
                     <div id="mainSegmentedControl">
                         <MenuItem currentSelectedMenuItem={this.props.currentSelectedMenuItem} myMenuItem={"components"}
