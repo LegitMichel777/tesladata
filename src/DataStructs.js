@@ -56,3 +56,16 @@ export class modesData {
         return [this.failname, this.code, this.id];
     }
 }
+
+export function getPrototype(curState) {
+    switch (curState) {
+        case "components":
+            return new componentsData("", "", "", "", "", "");
+        case "failures":
+            return new failsData("", "", "", "", "", "");
+        case "modes":
+            return new modesData("", "", "", "");
+        default:
+            console.log(`Unknown state for prototype ${curState}`);
+    }
+}

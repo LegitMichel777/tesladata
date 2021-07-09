@@ -117,8 +117,9 @@ th {
 }
 
 #NoData {
-    margin-top:20px;
-    font-size: 18px;
+    font-size: 22px;
     font-weight: 700;
     color: var(--text);
+    text-align: center;
+    height: 176px;
 }

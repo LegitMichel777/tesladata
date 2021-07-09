@@ -1,6 +1,6 @@
 import './App.css';
 import './Table/Table.css';
-import {componentsData, failsData, modesData} from "./DataStructs";
+import {componentsData, failsData, modesData, getPrototype} from "./DataStructs";
 import {MainTable} from './Table/Table'
 import React from "react";
 import './Table/Table'
@@ -508,6 +508,7 @@ class App extends React.Component {
                                tableType={this.state.currentSelectedMenuItem}
                                processClick={this.processClick.bind(this)}
                                highlightData={this.state.highlightData}
+                               tableDataPrototype={getPrototype(this.state.currentSelectedMenuItem)}
                                setSortMethod={(method, ascending) => {
                         this.setState({
                             sortedColumn: {

@@ -67,10 +67,11 @@ class TableRow extends React.Component {
 export class MainTable extends React.Component {
     render() {
         let tableData = this.props.displayData;
+        let dataPrototype = this.props.tableDataPrototype;
         let tableElements = Array(Math.max(tableData.length * 2 - 1, 0));
         if (tableData.length > 0) {
-            let tableMultiples = tableData[0].getData().length;
-            let tableIds = tableData[0].getIds();
+            let tableMultiples = dataPrototype.getData().length;
+            let tableIds = dataPrototype.getIds();
             for (let i = 0; i < tableData.length; i++) {
                 tableElements[2 * i] =
                     <TableRow rowIds={tableIds} rowData={tableData[i].getData()} rowNumber={tableData[i].num}
@@ -88,23 +89,24 @@ export class MainTable extends React.Component {
                         <TableSeparator multiples={tableMultiples + 3} key={"tableSeparator" + tableData[i].dbid}/>
                 }
             }
-            return (
-                <div id="tableContainer">
-                    <div id="TableShadow" />
-                    <table id="MainTable">
-                        <thead>
-                        <TableHeader headerData={tableData[0]} sortedColumn={this.props.sortedColumn} sortMethodAscending={this.props.sortMethodAscending} setSortMethod={this.props.setSortMethod}/>
-                        </thead>
-                        <tbody>
-                        {tableElements}
-                        </tbody>
-                    </table>
-                </div>
-            )
+        } else {
+            tableElements=[<tr>
+                <td id={"NoData"} colSpan={dataPrototype.getData().length+1}>
+                    No Data
+                </td>
+            </tr>]
         }
         return (
-            <div id="NoData">
-                No Data
+            <div id="tableContainer">
+                <div id="TableShadow" />
+                <table id="MainTable">
+                    <thead>
+                    <TableHeader headerData={dataPrototype} sortedColumn={this.props.sortedColumn} sortMethodAscending={this.props.sortMethodAscending} setSortMethod={this.props.setSortMethod}/>
+                    </thead>
+                    <tbody>
+                    {tableElements}
+                    </tbody>
+                </table>
             </div>
         )
     }
