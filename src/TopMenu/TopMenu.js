@@ -16,7 +16,7 @@ class SearchField extends React.Component {
 class TopMenuButton extends React.Component {
     render() {
         return (
-            <div className={"topMenuButtonCircle "+(this.props.disabled ? "topMenuButtonCircleDisabled" : "topMenuButtonCircleEnabled")}>
+            <div className={"topMenuButtonCircle "+(this.props.disabled ? "topMenuButtonCircleDisabled" : "topMenuButtonCircleEnabled")} onClick={ this.props.onClick }>
                 <div className="topMenuButtonInnerCircle">
                     <img className={"topMenuButtonIcon"+(this.props.disabled ? " topMenuButtonIconDisabled" : "")} id={this.props.imgId} src={ getIcon(this.props.iconName) } alt={this.props.alt} />
                 </div>
@@ -51,9 +51,15 @@ export class TopMenu extends React.Component {
             <div id="topMenu">
                 <div id="topMenuMainSection">
                     <div className="topSegEqual" id={"buttonsBar"}>
-                        <TopMenuButton iconName={"edit"} alt={"Edit"} imgId={"editIcon"} disabled={true}/>
-                        <TopMenuButton iconName={"delete"} alt={"Delete"} imgId={"deleteIcon"} disabled={true}/>
-                        <TopMenuButton iconName={"plus"} alt={"Add"} imgId={"plusIcon"} />
+                        <TopMenuButton iconName={"edit"} alt={"Edit"} imgId={"editIcon"} disabled={!this.props.editEnabled} onClick={() => {
+
+                        }}/>
+                        <TopMenuButton iconName={"delete"} alt={"Delete"} imgId={"deleteIcon"} disabled={!this.props.deleteEnabled} onClick={() => {
+                            this.props.performDelete();
+                        }}/>
+                        <TopMenuButton iconName={"plus"} alt={"Add"} imgId={"plusIcon"} disabled={false} onClick={() => {
+                            console.log("Not implemented yet");
+                        }}/>
                     </div>
                     <div id="mainSegmentedControl">
                         <MenuItem currentSelectedMenuItem={this.props.currentSelectedMenuItem} myMenuItem={"components"}

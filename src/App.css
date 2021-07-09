@@ -15,6 +15,8 @@ input::placeholder {
 }
 
 :root {
+    user-select: none;
+
     --float: #e4e4e4;
     --searchField: #666666;
     --segmentedControlHighlight: #cecece;

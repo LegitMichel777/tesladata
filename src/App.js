@@ -5,7 +5,8 @@ import {MainTable} from './Table/Table'
 import React from "react";
 import './Table/Table'
 import {TopMenu} from './TopMenu/TopMenu'
-import httpCall from "./services/appAxios";
+import httpCall from "./services/appAxios"
+import axios from 'axios'
 
 class App extends React.Component {
     async fetchStructs() {
@@ -30,23 +31,19 @@ class App extends React.Component {
             let componentsIdToIndexMap = new Map();
             let modesIdToIndexMap = new Map();
             for (let i=0;i<this.rawComponentsData.length;i++) {
-                componentsIdToIndexMap.set(this.rawComponentsData[i].id, i);
+                componentsIdToIndexMap.set(this.rawComponentsData[i].dbid, i);
             }
             for (let i=0;i<this.rawModesData.length;i++) {
-                modesIdToIndexMap.set(this.rawModesData[i].id, i);
+                modesIdToIndexMap.set(this.rawModesData[i].dbid, i);
             }
             this.rawFailsData=Array(gotFailsData.length);
             for (let i=0;i<gotFailsData.length;i++) {
                 let current=gotFailsData[i];
                 let component_id=current["component_pkid"];
                 let failmode_id=current["failmode_pkid"];
-                console.log(component_id);
-                console.log(failmode_id);
                 let componentIndex=componentsIdToIndexMap.get(component_id);
                 let failmodeIndex=modesIdToIndexMap.get(failmode_id);
-                console.log(componentIndex);
-                console.log(failmodeIndex);
-                this.rawFailsData[i]=new failsData(current["pkid"], component_id, this.rawComponentsData[componentIndex].productname, failmode_id, this.rawModesData[failmodeIndex].failname, this.rawModesData[failmodeIndex].code)
+                this.rawFailsData[i]=new failsData(current["pkid"], this.rawComponentsData[componentIndex].id, this.rawComponentsData[componentIndex].productname, this.rawModesData[failmodeIndex].id, this.rawModesData[failmodeIndex].failname, this.rawModesData[failmodeIndex].code)
             }
 
             // initialize the three selections array
@@ -152,11 +149,16 @@ class App extends React.Component {
                     console.log("Cannot find sort column ID "+sortedColumn);
                     return displayData;
                 }
+                let floatSort=elementsDescription[sortBy]==='failrate';
                 displayData.sort((a, b) => {
                     let aData=a.getData();
                     let bData=b.getData();
                     let aComp=aData[sortBy];
                     let bComp=bData[sortBy];
+                    if (floatSort) {
+                        aComp=parseFloat(aComp);
+                        bComp=parseFloat(bComp);
+                    }
                     if (sortMethodAscending) {
                         return (aComp>bComp ? 1 : -1);
                     }
@@ -311,18 +313,107 @@ class App extends React.Component {
             displayData: newDisplayData
         });
     }
-    async serverRequestDelete() {
-
+    async serverRequestDelete(delete_pkids, object) {
+        let objectUrlPiece;
+        switch (object) {
+            case "components":
+                objectUrlPiece="components";
+                break;
+            case "failures":
+                objectUrlPiece="mapping";
+                break;
+            case "modes":
+                objectUrlPiece="fail_mode";
+                break;
+            default:
+                console.log(`Server delete request called on unrecognized state ${object}`)
+                return;
+        }
+        await axios.post("http://127.0.0.1:5000/"+objectUrlPiece+"/delete", {
+                pkids_to_delete:delete_pkids
+            }
+        )
     }
-    deleteSelection() {
-
+    async deleteSelection() {
+        let deleteSelection=[];
+        let selectionCache, rawData, selectionRawData;
+        switch (this.state.currentSelectedMenuItem) {
+            case "components":
+                selectionCache=this.componentsSelectedCache;
+                rawData=this.rawComponentsData;
+                selectionRawData=this.componentSelections;
+                break;
+            case "failures":
+                selectionCache=this.failuresSelectedCache;
+                rawData=this.rawFailsData;
+                selectionRawData=this.failuresSelections;
+                break;
+            case "modes":
+                selectionCache=this.modesSelectedCache;
+                rawData=this.rawModesData;
+                selectionRawData=this.modesSelections;
+                break;
+            default:
+                console.log(`Delete selection called on invalid menu item ${this.state.currentSelectedMenuItem}`);
+        }
+        if (selectionCache.length>0) {
+            for (let i = 0; i < selectionCache.length; i++) {
+                deleteSelection.push(rawData[selectionCache[i]].dbid);
+            }
+            await this.serverRequestDelete(deleteSelection, this.state.currentSelectedMenuItem);
+            selectionCache.sort();
+            let currentCacheAt=selectionCache.length-1;
+            for (let i=rawData.length-1;i>=0;i--) {
+                if (currentCacheAt!==-1) {
+                    if (i===selectionCache[currentCacheAt]) {
+                        rawData.splice(i,1);
+                        selectionRawData.splice(i,1);
+                        currentCacheAt--;
+                    }
+                }
+            }
+            selectionCache.length=0;
+            this.setState({
+                displayData: this.recomputeData()
+            });
+        }
+    }
+    checkDeleteEnabled() {
+        switch (this.state.currentSelectedMenuItem) {
+            case "components":
+                return this.componentsSelectedCache.length>0;
+            case "failures":
+                return this.failuresSelectedCache.length>0;
+            case "modes":
+                return this.modesSelectedCache.length>0;
+            default:
+                console.log(`Check delete called on invalid menu item ${this.state.currentSelectedMenuItem}`);
+        }
+    }
+    checkEditEnabled() {
+        switch (this.state.currentSelectedMenuItem) {
+            case "components":
+                return this.componentsSelectedCache.length===1;
+            case "failures":
+                return this.failuresSelectedCache.length===1;
+            case "modes":
+                return this.modesSelectedCache.length===1;
+            default:
+                console.log(`Check edit called on invalid menu item ${this.state.currentSelectedMenuItem}`);
+        }
     }
     render() {
         return (
             <div id="masterContainer" className={window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark-theme" : ""}>
                 <div id="masterInnerContainer">
                     <div id="topMenuContainer">
-                        <TopMenu currentSelectedMenuItem={this.state.currentSelectedMenuItem} setSelectedMenuItem={this.changeCurrentSelectedMenuItem} />
+                        <TopMenu
+                            currentSelectedMenuItem={this.state.currentSelectedMenuItem}
+                            setSelectedMenuItem={this.changeCurrentSelectedMenuItem}
+                            deleteEnabled={this.checkDeleteEnabled()}
+                            editEnabled={this.checkEditEnabled()}
+                            performDelete={this.deleteSelection.bind(this)}
+                        />
                     </div>
                     <MainTable displayData={this.state.displayData}
                                sortedColumn={this.state.sortedColumn[this.state.currentSelectedMenuItem]}
