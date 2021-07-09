@@ -1,0 +1,75 @@
+#modal-container {
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    left: 0;
+    top: 0;
+    position: fixed;
+    background-color: rgba(1,1,1,0.31);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#modal-master {
+    z-index: 11;
+    background-color: #FBFBFB;
+    box-shadow: 0 0 9px rgba(1,1,1,0.21);
+    height: 272px;
+    width: 530px;
+    border-radius: 25px;
+}
+
+#inner-modal {
+    padding: 36px;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#modal-title {
+    font-weight: bold;
+    font-size: 28px;
+    text-align: center;
+    margin-bottom: 16px;
+}
+#modal-text {
+    font-weight: 500;
+    font-size: 17px;
+    line-height: 20px;
+    text-align: center;
+    margin-bottom: auto;
+}
+#modal-buttons-container {
+    display: flex;
+    justify-content: space-between;
+    height: 40px;
+    width: 293px;
+}
+.modal-buttons {
+    width: 124px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+    font-size: 17px;
+    font-weight: 500;
+}
+.modal-buttons:hover {
+    cursor: pointer;
+}
+#modal-delete-button {
+    background-color: #FFD4D4;
+    font-weight: 500;
+    color: #FF0000;
+}
+#modal-cancel-button {
+    background-color: #DFDFDF;
+}
+#hide-modal-container {
+    display: none;
+}

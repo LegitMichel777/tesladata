@@ -15,6 +15,7 @@
 }
 .topMenuButtonCircleEnabled:hover {
     background-color: var(--topMenuButtonHover);
+    cursor: pointer;
 }
 .topMenuButtonIcon {
     width: 30px;
@@ -71,6 +72,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 20px;
+    cursor: pointer;
 }
 .segmentedControlOptionSelected {
     background-color: var(--segmentedControlHighlight);

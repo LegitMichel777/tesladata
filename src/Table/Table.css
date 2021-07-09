@@ -73,7 +73,7 @@ tr:first-child td:last-child {
 #TableShadow {
     width: 100%;
     position: absolute;
-    z-index:5000;
+    z-index:5;
     box-shadow: 0 2px 2px var(--tableHeaderShadow);
     border-radius: 18px;
     pointer-events: none;
@@ -99,6 +99,7 @@ td {
 
 th {
     color: var(--text);
+    cursor: pointer;
 }
 
 .tableHeaderItemHighlighted, .tableHeaderItemUnhighlighted {

@@ -6,6 +6,7 @@ import React from "react";
 import './Table/Table'
 import {TopMenu} from './TopMenu/TopMenu'
 import httpCall from "./services/appAxios"
+import {DeleteModal} from './DeleteModal/deleteModal'
 import axios from 'axios'
 
 class App extends React.Component {
@@ -43,7 +44,7 @@ class App extends React.Component {
                 let failmode_id=current["failmode_pkid"];
                 let componentIndex=componentsIdToIndexMap.get(component_id);
                 let failmodeIndex=modesIdToIndexMap.get(failmode_id);
-                this.rawFailsData[i]=new failsData(current["pkid"], this.rawComponentsData[componentIndex].id, this.rawComponentsData[componentIndex].productname, this.rawModesData[failmodeIndex].id, this.rawModesData[failmodeIndex].failname, this.rawModesData[failmodeIndex].code)
+                this.rawFailsData[i]=new failsData(current["pkid"], component_id, this.rawComponentsData[componentIndex].productname, failmode_id, this.rawModesData[failmodeIndex].failname, this.rawModesData[failmodeIndex].code)
             }
 
             // initialize the three selections array
@@ -89,7 +90,9 @@ class App extends React.Component {
                 failures: true,
                 modes: true
             },
-            displayData: []
+            displayData: [],
+            modalShown: false,
+            modalText: ""
         };
     }
     changeCurrentSelectedMenuItem = (val) => {
@@ -175,9 +178,6 @@ class App extends React.Component {
         return displayData;
     }
     processClick(tableRow, action) {
-        console.log("Process click");
-        console.log(tableRow);
-        console.log(action);
         //single select -> deselect everything and only select one. set this to the anchor.
         //multi select -> toggle the selection on that one. if it is now selected, set it to the anchor.
         // if it isn't selected. set the anchor to no anchor.
@@ -334,10 +334,15 @@ class App extends React.Component {
             }
         )
     }
-    async deleteSelection() {
-        let deleteSelection=[];
-        let selectionCache, rawData, selectionRawData;
-        switch (this.state.currentSelectedMenuItem) {
+    getSelectedDetails() {
+        // gets details about the current selection for deletion.
+        // selectionCache: a list of indexes are selected in the current selected page
+        // rawData: just the raw list of data of the current selected page
+        // selectionRawData: an array of booleans that provides the source of truth for whether or not every element is selected on the page.
+        // relatedFailureDeletions: the indexes of the dependencies in Failures that would be deleted
+        let currentState=this.state.currentSelectedMenuItem;
+        let selectionCache, rawData, selectionRawData, relatedFailureDeletions;
+        switch (currentState) {
             case "components":
                 selectionCache=this.componentsSelectedCache;
                 rawData=this.rawComponentsData;
@@ -356,55 +361,137 @@ class App extends React.Component {
             default:
                 console.log(`Delete selection called on invalid menu item ${this.state.currentSelectedMenuItem}`);
         }
+        relatedFailureDeletions=[];
+        if (currentState !== "failures") {
+            let dbidGettingDeletedMap={};
+            for (let i=0;i<selectionCache.length;i++) {
+                dbidGettingDeletedMap[rawData[selectionCache[i]].dbid]=true;
+            }
+            for (let i=0;i<this.rawFailsData.length;i++) {
+                if (currentState==='components') {
+                    if (dbidGettingDeletedMap[this.rawFailsData[i].failComponentId]===true) {
+                        relatedFailureDeletions.push(i);
+                    }
+                } else {
+                    if (dbidGettingDeletedMap[this.rawFailsData[i].failModeId]===true) {
+                        relatedFailureDeletions.push(i);
+                    }
+                }
+            }
+        }
+        return [selectionCache, rawData, selectionRawData, relatedFailureDeletions];
+    }
+    async deleteSelection() {
+        // delete the current selection, taking into consideration that dependencies (such as failures) also have to be deleted.
+        let deleteSelection=[];
+        let selectionDetails=this.getSelectedDetails();
+        let selectionCache=selectionDetails[0], rawData=selectionDetails[1], selectionRawData=selectionDetails[2], relatedFailureDeletions=selectionDetails[3];
         if (selectionCache.length>0) {
             for (let i = 0; i < selectionCache.length; i++) {
                 deleteSelection.push(rawData[selectionCache[i]].dbid);
             }
+            //send list of deletions to server and wait for server response
             await this.serverRequestDelete(deleteSelection, this.state.currentSelectedMenuItem);
+            //delete the elements from the local copy according to the cache, which holds a list of items which are selected.
             selectionCache.sort();
-            let currentCacheAt=selectionCache.length-1;
-            for (let i=rawData.length-1;i>=0;i--) {
-                if (currentCacheAt!==-1) {
-                    if (i===selectionCache[currentCacheAt]) {
-                        rawData.splice(i,1);
-                        selectionRawData.splice(i,1);
-                        currentCacheAt--;
+            for (let i=selectionCache.length-1;i>=0;i--) {
+                rawData.splice(selectionCache[i],1);
+                selectionRawData.splice(selectionCache[i],1);
+            }
+            //clear the cache
+            selectionCache.length=0;
+            if (relatedFailureDeletions.length>0) {
+                //erase related deletions
+                relatedFailureDeletions.sort();
+                //remove all the related deletions from failures
+                //again, go through the list of things that have to be deleted and delete them.
+                for (let i=relatedFailureDeletions.length-1;i>=0;i--) {
+                    this.rawFailsData.splice(relatedFailureDeletions[i],1);
+                    this.failuresSelections.splice(relatedFailureDeletions[i],1);
+                }
+                // now remove these things from the cache.
+                this.failuresSelectedCache.sort();
+                let currentRelatedFailureDeletionsAt=relatedFailureDeletions.length-1;
+                for (let i=this.failuresSelectedCache.length-1;i>=0;i--) {
+                    if (currentRelatedFailureDeletionsAt!==-1) {
+                        if (this.failuresSelectedCache[i]===relatedFailureDeletions[currentRelatedFailureDeletionsAt]) {
+                            this.rawFailsData.splice(i,1);
+                            this.failuresSelections.splice(i,1);
+                            currentRelatedFailureDeletionsAt--;
+                        }
                     }
                 }
             }
-            selectionCache.length=0;
             this.setState({
                 displayData: this.recomputeData()
             });
         }
     }
-    checkDeleteEnabled() {
-        switch (this.state.currentSelectedMenuItem) {
-            case "components":
-                return this.componentsSelectedCache.length>0;
-            case "failures":
-                return this.failuresSelectedCache.length>0;
-            case "modes":
-                return this.modesSelectedCache.length>0;
-            default:
-                console.log(`Check delete called on invalid menu item ${this.state.currentSelectedMenuItem}`);
+    confirmAndDelete() {
+        // generate a confirmation message and show the modal
+        let nextConfirmMessage;
+        let selectionDetails=this.getSelectedDetails();
+        let selectionCache=selectionDetails[0], willDelete=selectionDetails[3].length;
+        if (selectionCache.length===0) {
+            return;
+        }
+        let currentState=this.state.currentSelectedMenuItem;
+        if (currentState==='failures') {
+            nextConfirmMessage=selectionCache.length+" Failure"+(selectionCache.length>1 ? "s" : "")+" will be deleted permanently";
+            this.setState({
+                modalShown: true,
+                modalText: nextConfirmMessage
+            })
+        } else {
+            nextConfirmMessage=selectionCache.length+" "+(currentState==='components' ? "Component" : "Mode")+(selectionCache.length>1 ? "s" : "");
+            if (willDelete>0) nextConfirmMessage+=" and "+willDelete+" related Failure"+(willDelete>1 ? "s":"");
+            nextConfirmMessage+=" will be deleted permanently";
+            this.setState({
+                modalShown: true,
+                modalText: nextConfirmMessage
+            });
         }
     }
-    checkEditEnabled() {
+    getCurrentNumberOfSelections() {
+        // get the number of items currently selected
         switch (this.state.currentSelectedMenuItem) {
             case "components":
-                return this.componentsSelectedCache.length===1;
+                return this.componentsSelectedCache.length;
             case "failures":
-                return this.failuresSelectedCache.length===1;
+                return this.failuresSelectedCache.length;
             case "modes":
-                return this.modesSelectedCache.length===1;
+                return this.modesSelectedCache.length;
             default:
-                console.log(`Check edit called on invalid menu item ${this.state.currentSelectedMenuItem}`);
+                console.log(`Getting current numnber ot seelctions called on invalid menu item ${this.state.currentSelectedMenuItem}`);
         }
+    }
+    checkDeleteEnabled() {
+        // determines whether or not the delete button is greyed out.
+        return this.getCurrentNumberOfSelections>0;
+    }
+    checkEditEnabled() {
+        // determines whether or not the edit button is greyed out
+        return this.getCurrentNumberOfSelections()===1
     }
     render() {
         return (
             <div id="masterContainer" className={window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark-theme" : ""}>
+                <DeleteModal show={ this.state.modalShown }
+                             text={ this.state.modalText }
+                             deleteClicked={() => {
+                                 this.deleteSelection();
+                                 this.setState({
+                                     modalShown: false
+                                 })
+                             }
+                             }
+                             cancelClicked={() => {
+                                 this.setState({
+                                     modalShown: false
+                                 })
+                             }
+                             }
+                />
                 <div id="masterInnerContainer">
                     <div id="topMenuContainer">
                         <TopMenu
@@ -412,7 +499,7 @@ class App extends React.Component {
                             setSelectedMenuItem={this.changeCurrentSelectedMenuItem}
                             deleteEnabled={this.checkDeleteEnabled()}
                             editEnabled={this.checkEditEnabled()}
-                            performDelete={this.deleteSelection.bind(this)}
+                            performDelete={this.confirmAndDelete.bind(this)}
                         />
                     </div>
                     <MainTable displayData={this.state.displayData}

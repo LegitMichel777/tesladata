@@ -27,6 +27,8 @@ export function getDisplayName(menuItem) {
             return "Failures";
         case "modes":
             return "Modes";
+        default:
+            console.log(`Get display name called on unrecognized menu item ${menuItem}`)
     }
 }
 

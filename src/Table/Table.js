@@ -1,6 +1,6 @@
 import React from "react";
 import {TableSeparator} from './TableSeparator'
-import {getDisplayName, getIcon} from '../utils'
+import {getIcon} from '../utils'
 
 class TableHeaderItem extends React.Component {
     render() {
