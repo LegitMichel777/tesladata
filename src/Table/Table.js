@@ -75,7 +75,7 @@ export class MainTable extends React.Component {
                 tableElements[2 * i] =
                     <TableRow rowIds={tableIds} rowData={tableData[i].getData()} rowNumber={tableData[i].num}
                                                  key={"tableRow" + this.props.tableType + tableData[i].dbid}
-                                                 rowHighlighted={this.props.highlightData[i]}
+                                                 rowHighlighted={tableData[i].selected}
                               rowSelectIdentifier={{
                                   tableType: this.props.tableType,
                                   tableIndex: i

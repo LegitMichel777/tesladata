@@ -7,10 +7,6 @@ import './Table/Table'
 import {TopMenu} from './TopMenu/TopMenu'
 import httpCall from "./services/appAxios";
 
-let mockCompData=[new componentsData(2, "why", "123", "are", "you", "42"), new componentsData(3, "i", "want", "everyone", "to", "43")];
-let mockFailData=[new failsData(2, "", "Device", "", "Melted", "MELT"), new failsData(3, "", "Box", "", "Collapsed", "COLLPSE")];
-let mockModeData=[];
-
 class App extends React.Component {
     async fetchStructs() {
         let fetchRequests=[httpCall('http://127.0.0.1:5000/components/fetchAll'),
@@ -56,7 +52,7 @@ class App extends React.Component {
             // initialize the three selections array
             this.componentSelections=Array(this.rawComponentsData.length);
             this.modesSelections=Array(this.rawModesData.length);
-            this.failsSelections=Array(this.rawFailsData.length);
+            this.failuresSelections=Array(this.rawFailsData.length);
             for (let i=0;i<this.rawComponentsData.length;i++) {
                 this.componentSelections[i]=false;
             }
@@ -64,38 +60,26 @@ class App extends React.Component {
                 this.modesSelections[i]=false;
             }
             for (let i=0;i<this.rawFailsData.length;i++) {
-                this.failsSelections[i]=false;
+                this.failuresSelections[i]=false;
             }
         })
-    }
-    getHighlightData(selectedState=this.state.currentSelectedMenuItem) {
-        switch (selectedState) {
-            case "components":
-                return this.componentSelections;
-            case "modes":
-                return this.modesSelections;
-            case "failures":
-                return this.failsSelections;
-            default:
-                console.log(`Tried to fetch highlight data for invalid state ${selectedState}`)
-        }
     }
     componentWillMount() {
         this.fetchStructs().then(() => {
             this.setState({
                 displayData: this.recomputeData("failures", "num", true),
-                highlightData: this.getHighlightData("failures")
             });
         })
     }
     constructor(props) {
         super(props);
-        this.componentsAnchor=-1;
-        this.lastComponentsAction="";
-        this.modesAnchor=-1;
-        this.lastModesAction="";
-        this.failuresAnchor=-1;
-        this.lastFailuresAction="";
+        this.selectionAnchor=-1;
+        this.selectionLastAction="";
+        this.componentsSelectedCache=[]; //selection cache is in database sorting
+        this.modesSelectedCache=[];
+        this.failuresSelectedCache=[];
+        this.currentSortToDbMapping=[];
+        this.currentDbToSortMapping=[];
         this.state = {
             currentSelectedMenuItem: "failures",
             sortedColumn: {
@@ -108,18 +92,18 @@ class App extends React.Component {
                 failures: true,
                 modes: true
             },
-            displayData: [],
-            highlightData: []
+            displayData: []
         };
     }
     changeCurrentSelectedMenuItem = (val) => {
         this.setState({
             currentSelectedMenuItem: val,
             displayData: this.recomputeData(val),
-            highlightData: this.getHighlightData(val)
         });
     };
     recomputeData(selectedState=this.state.currentSelectedMenuItem, sortedColumn=null, sortMethodAscending=null) {
+        this.selectionAnchor=-1;
+        this.selectionLastAction="";
         if (sortedColumn === null) {
             sortedColumn = this.state.sortedColumn[selectedState];
         }
@@ -128,22 +112,29 @@ class App extends React.Component {
         }
         console.log("Recomputing display data");
         let displayData = [];
+        let accompanyingSelectionData=[];
         switch (selectedState) {
             case "components":
                 displayData = this.rawComponentsData.slice();
+                accompanyingSelectionData = this.componentSelections;
                 break;
             case "failures":
                 displayData = this.rawFailsData.slice();
+                accompanyingSelectionData = this.failuresSelections;
                 break;
             case "modes":
                 displayData = this.rawModesData.slice();
+                accompanyingSelectionData = this.modesSelections;
                 break;
             default:
                 console.log("Unknown selected state (" + selectedState + ")")
         }
         for (let i = 0; i < displayData.length; i++) {
             displayData[i].num = i + 1;
+            displayData[i].selected = accompanyingSelectionData[i];
         }
+        this.currentSortToDbMapping=Array(displayData.length);
+        this.currentDbToSortMapping=Array(displayData.length);
         if (displayData.length > 0) {
             if (sortedColumn === "num") {
                 if (!sortMethodAscending) {
@@ -172,6 +163,12 @@ class App extends React.Component {
                     return (aComp<bComp ? 1 : -1);
                 });
             }
+            for (let i=0;i<displayData.length;i++) {
+                this.currentSortToDbMapping[i]=displayData[i].num-1;
+            }
+            for (let i=0;i<displayData.length;i++) {
+                this.currentDbToSortMapping[this.currentSortToDbMapping[i]]=i;
+            }
         }
         return displayData;
     }
@@ -185,8 +182,140 @@ class App extends React.Component {
         //range select -> look at the anchor. if there is no anchor, simply treat this as a multi-select (but without setting another anchor)
         // if there is an anchor, use it and LEAVE IT THERE.
         // if the last action was a multi-select, completely erase its selection and do the selection.
+        // remember to set the anchor to none every time the table is resorted
 
         //required data for each state: anchor, lastAction
+        //IMPORTANT: Anchor is in terms of current coordinates
+        let relSelectionArray, relSelectionCache;
+        switch (tableRow.tableType) {
+            case "components":
+                relSelectionArray=this.componentSelections;
+                relSelectionCache=this.componentsSelectedCache;
+                break;
+            case "failures":
+                relSelectionArray=this.failuresSelections;
+                relSelectionCache=this.failuresSelectedCache;
+                break;
+            case "modes":
+                relSelectionArray=this.modesSelections;
+                relSelectionCache=this.modesSelectedCache;
+                break;
+            default:
+                console.log(`Processing click for unknown table type ${tableRow.tableType}`);
+        }
+        let selectIndex=tableRow.tableIndex;
+        let newDisplayData=this.state.displayData.slice();
+
+        if (action==="single") {
+            for (let i=0;i<relSelectionCache.length;i++) {
+                relSelectionArray[relSelectionCache[i]]=false;
+            }
+            let dbIndex=this.currentSortToDbMapping[selectIndex];
+            relSelectionArray[dbIndex]=true;
+            for (let i=0;i<relSelectionCache.length;i++) {
+                newDisplayData[this.currentDbToSortMapping[relSelectionCache[i]]].selected=false;
+            }
+            newDisplayData[selectIndex].selected=true;
+            relSelectionCache=[dbIndex];
+            this.selectionLastAction = {
+                action: "single",
+                params: selectIndex
+            }
+            this.selectionAnchor=selectIndex;
+        } else if (action==="multi"||(action==='range'&&this.selectionAnchor===-1)) {
+            let dbIndex=this.currentSortToDbMapping[selectIndex];
+            if (relSelectionArray[dbIndex]) {
+                // remove the selection and set anchor to none
+                relSelectionArray[dbIndex]=false;
+                newDisplayData[selectIndex].selected=false;
+                for (let i=0;i<relSelectionCache.length;i++) {
+                    if (relSelectionCache[i]===dbIndex) {
+                        relSelectionCache.splice(i,1);
+                    }
+                }
+                this.selectionAnchor=-1;
+            } else {
+                // add the selection and set anchor to the selection
+                relSelectionArray[dbIndex]=true;
+                newDisplayData[selectIndex].selected=true;
+                relSelectionCache.push(dbIndex);
+                if (action!=='range') {
+                    this.selectionAnchor = selectIndex;
+                }
+            }
+            if (action==='range') {
+                this.selectionLastAction = {
+                    action: 'range_multi_fallback',
+                    params: selectIndex
+                }
+            } else {
+                this.selectionLastAction = {
+                    action: "multi",
+                    params: selectIndex
+                };
+            }
+        } else if (action==='range') {
+            if (this.selectionLastAction.action==='range') {
+                let erase_l, erase_r;
+                erase_l=Math.min(this.selectionAnchor, this.selectionLastAction.params);
+                erase_r=Math.max(this.selectionAnchor, this.selectionLastAction.params);
+                for (let i=erase_l;i<=erase_r;i++) {
+                    relSelectionArray[this.currentSortToDbMapping[i]]=false;
+                    newDisplayData[i].selected=false;
+                }
+                for (let i=0;i<relSelectionCache.length;i++) {
+                    if (this.currentDbToSortMapping[relSelectionCache[i]]>=erase_l&&this.currentDbToSortMapping[relSelectionCache[i]]<=erase_r) {
+                        relSelectionCache.splice(i,1);
+                        i--;
+                    }
+                }
+                console.log("Trying to erase ")
+                console.log(erase_l);
+                console.log(erase_r);
+            }
+            let l,r;
+            l=Math.min(selectIndex, this.selectionAnchor);
+            r=Math.max(selectIndex, this.selectionAnchor);
+            for (let i=l;i<=r;i++) {
+                if (!relSelectionArray[this.currentSortToDbMapping[i]]) {
+                    relSelectionCache.push(this.currentSortToDbMapping[i]);
+                }
+                relSelectionArray[this.currentSortToDbMapping[i]]=true;
+                newDisplayData[i].selected=true;
+            }
+            console.log("range selecting")
+            console.log(l);
+            console.log(r);
+            this.selectionLastAction = {
+                action: "range",
+                params: selectIndex
+            };
+        }
+        switch (tableRow.tableType) {
+            case "components":
+                this.componentSelections=relSelectionArray;
+                this.componentsSelectedCache=relSelectionCache;
+                break;
+            case "failures":
+                this.failuresSelections=relSelectionArray;
+                this.failuresSelectedCache=relSelectionCache;
+                break;
+            case "modes":
+                this.modesSelections=relSelectionArray;
+                this.modesSelectedCache=relSelectionCache;
+                break;
+            default:
+                console.log(`Processing click for unknown table type ${tableRow.tableType}`);
+        }
+        this.setState({
+            displayData: newDisplayData
+        });
+    }
+    async serverRequestDelete() {
+
+    }
+    deleteSelection() {
+
     }
     render() {
         return (
@@ -199,7 +328,7 @@ class App extends React.Component {
                                sortedColumn={this.state.sortedColumn[this.state.currentSelectedMenuItem]}
                                sortMethodAscending={this.state.sortMethodAscending[this.state.currentSelectedMenuItem]}
                                tableType={this.state.currentSelectedMenuItem}
-                               processClick={this.processClick}
+                               processClick={this.processClick.bind(this)}
                                highlightData={this.state.highlightData}
                                setSortMethod={(method, ascending) => {
                         this.setState({

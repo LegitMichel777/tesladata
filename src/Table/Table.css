@@ -12,6 +12,7 @@
     width: 100%;
     border-collapse: collapse;
     border-radius: 18px;
+    user-select: none;
 }
 
 .TableRow, #TableHeader, #TableShadow {
