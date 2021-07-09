@@ -467,7 +467,7 @@ class App extends React.Component {
     }
     checkDeleteEnabled() {
         // determines whether or not the delete button is greyed out.
-        return this.getCurrentNumberOfSelections>0;
+        return this.getCurrentNumberOfSelections()>0;
     }
     checkEditEnabled() {
         // determines whether or not the edit button is greyed out

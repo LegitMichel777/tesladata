@@ -29,6 +29,12 @@ input::placeholder {
     --tableHeaderShadow: #bcbcbc;
     --topMenuButtonHover: #dadada;
     --topMenuButtonDisabled: #f3f3f3;
+    --modal-overlay: rgba(1,1,1,0.31);
+    --modal-background: #fbfbfb;
+    --modal-shadow: rgba(1,1,1,0.21);
+    --delete-modal-cancel-bg: #dfdfdf;
+    --delete-modal-delete-bg: #ffd4d4;
+    --delete-modal-delete: #ff0000;
     --text: #000000;
 }
 
@@ -44,10 +50,17 @@ input::placeholder {
         --segmentedSelectedShadow: #0c0c0c;
         --separator: #404040;
         --table: #121212;
+        --table-row-select: #242424;
         --tableHeader: #1b1b1b;
         --tableHeaderShadow: #0e0e0e;
         --topMenuButtonHover: #292929;
         --topMenuButtonDisabled: #111111;
+        --modal-overlay: rgba(1,1,1,0.66);
+        --modal-background: #121212;
+        --modal-shadow: rgba(1,1,1,0.72);
+        --delete-modal-cancel-bg: #202020;
+        --delete-modal-delete-bg: #3e0909;
+        --delete-modal-delete: #ff3838;
         --text: #ffffff;
     }
 }

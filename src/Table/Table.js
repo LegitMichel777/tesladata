@@ -41,6 +41,9 @@ class TableRow extends React.Component {
     render() {
         let rowData=this.props.rowData;
         let children=Array(rowData.length+3);
+        if (this.props.editable) {
+
+        }
         children[0]=<td key={"num"} className={(this.props.rowHighlighted ? "TableRowHighlighted" : "")}>{this.props.rowNumber}</td>;
         for (let i=1;i<=rowData.length;i++) {
             children[i]=React.createElement('td', {key: this.props.rowIds[i-1], className: (this.props.rowHighlighted ? "TableRowHighlighted" : "")}, rowData[i-1]);
@@ -90,7 +93,7 @@ export class MainTable extends React.Component {
                 }
             }
         } else {
-            tableElements=[<tr>
+            tableElements=[<tr key={"NoDataTableTr"}>
                 <td id={"NoData"} colSpan={dataPrototype.getData().length+1}>
                     No Data
                 </td>

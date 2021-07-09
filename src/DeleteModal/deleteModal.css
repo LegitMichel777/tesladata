@@ -5,7 +5,7 @@
     left: 0;
     top: 0;
     position: fixed;
-    background-color: rgba(1,1,1,0.31);
+    background-color: var(--modal-overlay);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -13,8 +13,8 @@
 
 #modal-master {
     z-index: 11;
-    background-color: #FBFBFB;
-    box-shadow: 0 0 9px rgba(1,1,1,0.21);
+    background-color: var(--modal-background);
+    box-shadow: 0 0 9px var(--modal-shadow);
     height: 272px;
     width: 530px;
     border-radius: 25px;
@@ -35,6 +35,7 @@
     font-size: 28px;
     text-align: center;
     margin-bottom: 16px;
+    color: var(--text);
 }
 #modal-text {
     font-weight: 500;
@@ -42,6 +43,7 @@
     line-height: 20px;
     text-align: center;
     margin-bottom: auto;
+    color: var(--text);
 }
 #modal-buttons-container {
     display: flex;
@@ -63,12 +65,13 @@
     cursor: pointer;
 }
 #modal-delete-button {
-    background-color: #FFD4D4;
+    background-color: var(--delete-modal-delete-bg);
     font-weight: 500;
-    color: #FF0000;
+    color: var(--delete-modal-delete);
 }
 #modal-cancel-button {
-    background-color: #DFDFDF;
+    color: var(--text);
+    background-color: var(--delete-modal-cancel-bg);
 }
 #hide-modal-container {
     display: none;
