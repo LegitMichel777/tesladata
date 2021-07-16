@@ -1,11 +1,7 @@
-.modal-delete-button {
+.modal-edit-button {
     background-color: var(--delete-modal-delete-bg);
     font-weight: 500;
     color: var(--delete-modal-delete);
-}
-.modal-master {
-    height: 272px;
-    width: 530px;
 }
 .inner-modal {
     padding: 36px;

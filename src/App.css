@@ -58,9 +58,9 @@ input::placeholder {
         --modal-overlay: rgba(1,1,1,0.66);
         --modal-background: #121212;
         --modal-shadow: rgba(1,1,1,0.72);
-        --delete-modal-cancel-bg: #202020;
-        --delete-modal-delete-bg: #3e0909;
-        --delete-modal-delete: #ff3838;
+        --delete-modal-cancel-bg: #232323;
+        --delete-modal-delete-bg: #5f0707;
+        --delete-modal-delete: #ff0000;
         --text: #ffffff;
     }
 }

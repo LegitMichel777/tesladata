@@ -1,16 +1,23 @@
-import React from 'react'
+import React from 'react';
+import PropTypes from 'prop-types';
 
-export class TableSeparator extends React.Component {
-    render() {
-        let children = Array(this.props.multiples);
-        children[0]=(<td key={"TableSeparator0"}>
+export default function TableSeparator(props) {
+    const children = Array(props.multiples);
+    children[0] = (
+        <td key="TableSeparator0">
             <div className="tdTableSeparatorHead" />
-        </td>);
-        for (let i=1;i<this.props.multiples;i++) {
-            children[i]=<td key={"TableSeparator"+i}>
+        </td>
+    );
+    for (let i = 1; i < props.multiples; i++) {
+        children[i] = (
+            <td key={`TableSeparator${i}`}>
                 <div className="tdTableSeparator" />
             </td>
-        }
-        return React.createElement('tr', null, children);
+        );
     }
+    return React.createElement('tr', null, children);
 }
+
+TableSeparator.propTypes = {
+    multiples: PropTypes.number.isRequired,
+};
