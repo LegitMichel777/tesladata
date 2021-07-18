@@ -1,15 +1,28 @@
 export default class ModesData {
-    constructor(dbid, failname, code, id) {
+    constructor(dbid, failname, code, description) {
         this.dbid = dbid;
         this.failname = failname;
         this.code = code;
-        this.id = id;
+        this.description = description;
+    }
 
-        this.describe = ['Fail Name', 'Fail Code', 'ID'];
-        this.getIds = ['name', 'code', 'id'];
+    static get describe() {
+        return ['Fail Name', 'Fail Code', 'Description'];
+    }
+
+    static get getIds() {
+        return ['name', 'code', 'description'];
+    }
+
+    static get types() {
+        return ['string', 'string', 'string'];
+    }
+
+    static get constraints() {
+        return [{ canBeEmpty: false }, { canBeEmpty: false }, { canBeEmpty: false }];
     }
 
     getData() {
-        return [this.failname, this.code, this.id];
+        return [this.failname, this.code, this.description];
     }
 }

@@ -3,13 +3,13 @@
     font-weight: 500;
     color: var(--delete-modal-delete);
 }
-.modal-master {
+.modal-master-delete {
     height: 272px;
     width: 530px;
 }
-.inner-modal {
+.inner-modal-delete {
     padding: 36px;
 }
-.modal-title {
+.modal-title-delete {
     margin-bottom: 16px;
 }

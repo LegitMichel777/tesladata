@@ -3,9 +3,9 @@
     font-weight: 500;
     color: var(--delete-modal-delete);
 }
-.inner-modal {
+.modal-master-edit {
     padding: 36px;
 }
-.modal-title {
+.modal-title-edit {
     margin-bottom: 16px;
 }

@@ -10,24 +10,27 @@ import MainTable from './Table/Table';
 
 import TopMenu from './TopMenu/TopMenu';
 import httpCall from './services/appAxios';
-import DeleteModal from './DeleteModal/deleteModal';
+import DeleteModal from './Modals/DeleteModal/deleteModal';
+import AddModal from './Modals/AddModal/addModal';
+import { getSingularDisplayName } from './utils';
 
 class App extends React.Component {
     async fetchStructs() {
-        const fetchRequests = [httpCall('http://127.0.0.1:5000/components/fetchAll'),
-            httpCall('http://127.0.0.1:5000/fail_mode/fetchAll'),
-            httpCall('http://127.0.0.1:5000/mapping/fetchAll'),
+        const fetchRequests = [httpCall('http://192.168.1.105:5435/components/fetchAll'),
+            httpCall('http://192.168.1.105:5435/fail_mode/fetchAll'),
+            httpCall('http://192.168.1.105:5435/mapping/fetchAll'),
         ];
         await Promise.all(fetchRequests).then((reqsReturn) => {
+            console.log('Got it!');
             const gotComponentsData = reqsReturn[0][0];
             const gotModesData = reqsReturn[1][0];
             const gotFailsData = reqsReturn[2][0];
             this.rawComponentsData = Array(gotComponentsData.length);
             for (let i = 0; i < gotComponentsData.length; i++) {
                 const current = gotComponentsData[i];
+                console.log(current);
                 this.rawComponentsData[i] = new ComponentsData(current.pkid,
                     current.productname,
-                    current.id,
                     current.manufacturer,
                     current.contact,
                     current.failrate);
@@ -38,7 +41,7 @@ class App extends React.Component {
                 this.rawModesData[i] = new ModesData(current.pkid,
                     current.failname,
                     current.code,
-                    current.id);
+                    current.description);
             }
 
             const componentsIdToIndexMap = new Map();
@@ -56,10 +59,21 @@ class App extends React.Component {
                 const failmodeId = current.failmode_pkid;
                 const componentIndex = componentsIdToIndexMap.get(componentId);
                 const failmodeIndex = modesIdToIndexMap.get(failmodeId);
-                this.rawFailsData[i] = new FailsData(current.pkid,
-                    componentId, this.rawComponentsData[componentIndex].productname,
-                    failmodeId, this.rawModesData[failmodeIndex].failname,
-                    this.rawModesData[failmodeIndex].code);
+                if (componentIndex === undefined || failmodeIndex === undefined) {
+                    console.log('Unable to find corresponding');
+                    if (componentIndex === undefined && failmodeIndex === undefined) {
+                        console.log('Component and Mode');
+                    } else {
+                        console.log(componentIndex === undefined ? 'Component' : 'Mode');
+                    }
+                    console.log(`. Fail #${i} in array, object with pkid ${current.pkid}, component id ${current.component_pkid}, mode id ${current.failmode_pkid}.`);
+                } else {
+                    this.rawFailsData[i] = new FailsData(current.pkid,
+                        componentId, this.rawComponentsData[componentIndex].productname,
+                        failmodeId, this.rawModesData[failmodeIndex].failname,
+                        this.rawModesData[failmodeIndex].code,
+                        this.rawModesData[failmodeIndex].description);
+                }
             }
 
             // initialize the three selections array
@@ -103,8 +117,9 @@ class App extends React.Component {
                 modes: true,
             },
             displayData: [],
-            modalShown: false,
-            modalText: '',
+            deleteModalShown: false,
+            deleteModalText: '',
+            addModalShown: false,
         };
     }
 
@@ -157,7 +172,8 @@ class App extends React.Component {
                     displayData.reverse();
                 }
             } else {
-                const elementsDescription = displayData[0].getIds();
+                const elementsDescription = displayData[0].constructor.getIds;
+                const elementsType = displayData[0].constructor.types;
                 let sortBy = -1;
                 for (let i = 0; i < elementsDescription.length; i++) {
                     if (elementsDescription[i] === sortedColumn) {
@@ -168,7 +184,7 @@ class App extends React.Component {
                     console.log(`Cannot find sort column ID ${sortedColumn}`);
                     return displayData;
                 }
-                const floatSort = elementsDescription[sortBy] === 'failrate';
+                const floatSort = elementsType[sortBy] === 'number';
                 displayData.sort((a, b) => {
                     const aData = a.getData();
                     const bData = b.getData();
@@ -437,18 +453,18 @@ class App extends React.Component {
         }
         const currentState = this.state.currentSelectedMenuItem;
         if (currentState === 'failures') {
-            nextConfirmMessage = `${selectionCache.length} Failure${selectionCache.length > 1 ? 's' : ''} will be deleted permanently`;
+            nextConfirmMessage = `${selectionCache.length} ${getSingularDisplayName('failures')}${selectionCache.length > 1 ? 's' : ''} will be deleted permanently`;
             this.setState({
-                modalShown: true,
-                modalText: nextConfirmMessage,
+                deleteModalShown: true,
+                deleteModalText: nextConfirmMessage,
             });
         } else {
-            nextConfirmMessage = `${selectionCache.length} ${currentState === 'components' ? 'Component' : 'Mode'}${selectionCache.length > 1 ? 's' : ''}`;
-            if (willDelete > 0) nextConfirmMessage += ` and ${willDelete} related Failure${willDelete > 1 ? 's' : ''}`;
+            nextConfirmMessage = `${selectionCache.length} ${getSingularDisplayName(currentState === 'components' ? 'components' : 'modes')}${selectionCache.length > 1 ? 's' : ''}`;
+            if (willDelete > 0) nextConfirmMessage += ` and ${willDelete} related ${getSingularDisplayName('failures')}${willDelete > 1 ? 's' : ''}`;
             nextConfirmMessage += ' will be deleted permanently';
             this.setState({
-                modalShown: true,
-                modalText: nextConfirmMessage,
+                deleteModalShown: true,
+                deleteModalText: nextConfirmMessage,
             });
         }
     }
@@ -482,19 +498,38 @@ class App extends React.Component {
         return (
             <div id="masterContainer" className={window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark-theme' : ''}>
                 <DeleteModal
-                    show={this.state.modalShown}
-                    text={this.state.modalText}
+                    show={this.state.deleteModalShown}
+                    text={this.state.deleteModalText}
                     deleteClicked={() => {
                         this.deleteSelection();
                         this.setState({
-                            modalShown: false,
+                            deleteModalShown: false,
                         });
                     }}
                     cancelClicked={() => {
                         this.setState({
-                            modalShown: false,
+                            deleteModalShown: false,
                         });
                     }}
+                />
+                <AddModal
+                    show={this.state.addModalShown}
+                    addClicked={(args) => {
+                        const curPrototype = getPrototype(this.state.currentSelectedMenuItem).constructor;
+                        if (args.length === curPrototype.describe.length) {
+                            console.log('Adding', args);
+                        }
+                        this.setState({
+                            addModalShown: false,
+                        });
+                    }}
+                    cancelClicked={() => {
+                        this.setState({
+                            addModalShown: false,
+                        });
+                    }}
+                    addItemDisplayTitle={getSingularDisplayName(this.state.currentSelectedMenuItem)}
+                    objectPrototype={getPrototype(this.state.currentSelectedMenuItem)}
                 />
                 <div id="masterInnerContainer">
                     <div id="topMenuContainer">
@@ -504,6 +539,11 @@ class App extends React.Component {
                             deleteEnabled={this.checkDeleteEnabled()}
                             editEnabled={this.checkEditEnabled()}
                             performDelete={this.confirmAndDelete.bind(this)}
+                            performAdd={() => {
+                                this.setState({
+                                    addModalShown: true,
+                                });
+                            }}
                         />
                     </div>
                     <MainTable

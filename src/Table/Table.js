@@ -36,9 +36,9 @@ TableHeaderItem.propTypes = {
 };
 
 function TableHeader(props) {
-    const headerData = props.headerData.describe.slice();
+    const headerData = props.headerData.constructor.describe.slice();
     headerData.unshift('#');
-    const headerDataIds = props.headerData.getIds.slice();
+    const headerDataIds = props.headerData.constructor.getIds.slice();
     headerDataIds.unshift('num');
     const children = Array(headerData.length + 3);
     for (let i = 0; i < headerData.length; i++) {
@@ -90,7 +90,7 @@ function TableRow(props) {
 }
 
 TableRow.propTypes = {
-    rowData: PropTypes.arrayOf(PropTypes.object).isRequired,
+    rowData: PropTypes.arrayOf(PropTypes.string).isRequired,
     rowHighlighted: PropTypes.bool.isRequired,
     rowNumber: PropTypes.number.isRequired,
     rowIds: PropTypes.arrayOf(PropTypes.string).isRequired,
@@ -107,7 +107,7 @@ export default function MainTable(props) {
     let tableElements = Array(Math.max(tableData.length * 2 - 1, 0));
     if (tableData.length > 0) {
         const tableMultiples = dataPrototype.getData().length;
-        const tableIds = dataPrototype.getIds();
+        const tableIds = dataPrototype.constructor.getIds;
         for (let i = 0; i < tableData.length; i++) {
             tableElements[2 * i] = (
                 <TableRow

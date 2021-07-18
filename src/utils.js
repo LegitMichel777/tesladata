@@ -36,6 +36,20 @@ export function getDisplayName(menuItem) {
     return undefined;
 }
 
+export function getSingularDisplayName(menuItem) {
+    switch (menuItem) {
+    case 'components':
+        return 'Component';
+    case 'failures':
+        return 'Mapping';
+    case 'modes':
+        return 'Fail Mode';
+    default:
+        console.log(`Get singular display name called on unrecognized menu item ${menuItem}`);
+    }
+    return undefined;
+}
+
 export function getIcon(name) {
     const isDarkTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
     switch (name) {

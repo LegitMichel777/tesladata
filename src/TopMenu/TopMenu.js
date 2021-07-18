@@ -85,7 +85,7 @@ export default class TopMenu extends React.Component {
                             imgId="plusIcon"
                             disabled={false}
                             onClick={() => {
-                                console.log('Not implemented yet');
+                                this.props.performAdd();
                             }}
                         />
                     </div>
@@ -123,5 +123,6 @@ TopMenu.propTypes = {
     editEnabled: PropTypes.bool.isRequired,
     deleteEnabled: PropTypes.bool.isRequired,
     performDelete: PropTypes.func.isRequired,
+    performAdd: PropTypes.func.isRequired,
     currentSelectedMenuItem: PropTypes.string.isRequired,
 };

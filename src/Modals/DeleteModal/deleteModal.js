@@ -1,26 +1,29 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import ModalShared from '../modal-shared/modalShared';
 import '../modal-shared/modalShared.css';
 import './deleteModal.css';
 
 export default function DeleteModal(props) {
     return (
-        <div className={(props.show ? 'modal-container' : 'hide-modal-container')}>
-            <div className="modal-master">
-                <div className="inner-modal">
-                    <div className="modal-title">Are you sure?</div>
-                    <div className="modal-text">{ props.text }</div>
-                    <div className="modal-buttons-container">
+        <ModalShared
+            show={props.show}
+            modalBody={
+                [
+                    <div className="modal-text" key="modal-delete-main-text">{ props.text }</div>,
+                    <div className="modal-buttons-container" key="modal-delete-buttons-container">
                         <div className="modal-buttons modal-delete-button" onClick={props.deleteClicked}>
-                                Delete
+                            Delete
                         </div>
                         <div className="modal-buttons modal-cancel-button" onClick={props.cancelClicked}>
-                                Cancel
+                            Cancel
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                    </div>,
+                ]
+            }
+            modalTitle="Are you sure?"
+            stylingId="delete"
+        />
     );
 }
 
