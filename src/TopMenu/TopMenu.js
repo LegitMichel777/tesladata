@@ -62,13 +62,20 @@ export default class TopMenu extends React.Component {
             <div id="topMenu">
                 <div id="topMenuMainSection">
                     <div className="topSegEqual" id="buttonsBar">
+                        <div
+                            id="selectOrDeselectAll"
+                            className="topMenuButtonCircleEnabled"
+                            onClick={this.props.performDeSelectAll}
+                        >
+                            {this.props.selectionToggleButtonIsSelectAll ? 'Select All' : 'Deselect All'}
+                        </div>
                         <TopMenuButton
                             iconName="edit"
                             alt="Edit"
                             imgId="editIcon"
                             disabled={!this.props.editEnabled}
                             onClick={() => {
-
+                                console.log('Edit clicked! Do something.');
                             }}
                         />
                         <TopMenuButton
@@ -125,5 +132,7 @@ TopMenu.propTypes = {
     deleteEnabled: PropTypes.bool.isRequired,
     performDelete: PropTypes.func.isRequired,
     performAdd: PropTypes.func.isRequired,
+    performDeSelectAll: PropTypes.func.isRequired,
     currentSelectedMenuItem: PropTypes.string.isRequired,
+    selectionToggleButtonIsSelectAll: PropTypes.bool.isRequired,
 };

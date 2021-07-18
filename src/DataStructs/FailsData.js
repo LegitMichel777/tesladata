@@ -13,6 +13,10 @@ export default class FailsData {
         return ['Fail Code', 'Fail Name', 'Failed Component', 'Reason'];
     }
 
+    static get overrideRootDescribe() {
+        return ['component_pkid', 'mode_pkid'];
+    }
+
     static get getIds() {
         return ['code', 'failname', 'failedcomponent', 'reason'];
     }

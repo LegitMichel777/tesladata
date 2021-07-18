@@ -9,16 +9,19 @@ import FailsData from './DataStructs/FailsData';
 import MainTable from './Table/Table';
 
 import TopMenu from './TopMenu/TopMenu';
-import httpCall from './services/appAxios';
+import httpCall from './services/httpCall';
 import DeleteModal from './Modals/DeleteModal/deleteModal';
 import AddModal from './Modals/AddModal/addModal';
 import { getSingularDisplayName } from './utils';
+import serverRequestAdd from './services/serverRequestAdd';
+import * as globals from './globals';
+import cleanseInput from './DataStructs/cleanseInput';
 
 class App extends React.Component {
     async fetchStructs() {
-        const fetchRequests = [httpCall('http://192.168.1.105:5435/components/fetchAll'),
-            httpCall('http://192.168.1.105:5435/fail_mode/fetchAll'),
-            httpCall('http://192.168.1.105:5435/mapping/fetchAll'),
+        const fetchRequests = [httpCall(`${globals.rootURL}/components/fetchAll`),
+            httpCall(`${globals.rootURL}/fail_mode/fetchAll`),
+            httpCall(`${globals.rootURL}/mapping/fetchAll`),
         ];
         await Promise.all(fetchRequests).then((reqsReturn) => {
             console.log('Got it!');
@@ -120,6 +123,7 @@ class App extends React.Component {
             deleteModalShown: false,
             deleteModalText: '',
             addModalShown: false,
+            dataLength: -1,
         };
     }
 
@@ -127,6 +131,7 @@ class App extends React.Component {
         this.fetchStructs().then(() => {
             this.setState({
                 displayData: this.recomputeData('failures', 'num', true),
+                dataLength: this.getRawData('failures').length,
             });
         });
     }
@@ -135,31 +140,43 @@ class App extends React.Component {
         this.setState({
             currentSelectedMenuItem: val,
             displayData: this.recomputeData(val),
+            dataLength: this.getRawData(val).length,
         });
+    }
+
+    getRawData(selectedState = this.state.currentSelectedMenuItem) {
+        switch (selectedState) {
+        case 'components':
+            return this.rawComponentsData;
+        case 'failures':
+            return this.rawFailsData;
+        case 'modes':
+            return this.rawModesData;
+        default:
+            console.log(`Get raw data called on invalid state ${selectedState}.`);
+            return undefined;
+        }
     }
 
     recomputeData(selectedState = this.state.currentSelectedMenuItem, sortedColumn = this.state.sortedColumn[selectedState], sortMethodAscending = this.state.sortMethodAscending[selectedState]) {
         this.selectionAnchor = -1;
         this.selectionLastAction = '';
         console.log('Recomputing display data');
-        let displayData = [];
         let accompanyingSelectionData = [];
         switch (selectedState) {
         case 'components':
-            displayData = this.rawComponentsData.slice();
             accompanyingSelectionData = this.componentSelections;
             break;
         case 'failures':
-            displayData = this.rawFailsData.slice();
             accompanyingSelectionData = this.failuresSelections;
             break;
         case 'modes':
-            displayData = this.rawModesData.slice();
             accompanyingSelectionData = this.modesSelections;
             break;
         default:
             console.log(`Unknown selected state (${selectedState})`);
         }
+        const displayData = this.getRawData(selectedState).slice();
         for (let i = 0; i < displayData.length; i++) {
             displayData[i].num = i + 1;
             displayData[i].selected = accompanyingSelectionData[i];
@@ -210,20 +227,10 @@ class App extends React.Component {
         return displayData;
     }
 
-    processClick(tableRow, action) {
-    // single select -> deselect everything and only select one. set this to the anchor.
-    // multi select -> toggle the selection on that one. if it is now selected, set it to the anchor.
-    // if it isn't selected. set the anchor to no anchor.
-    // range select -> look at the anchor. if there is no anchor, simply treat this as a multi-select (but without setting another anchor)
-    // if there is an anchor, use it and LEAVE IT THERE.
-    // if the last action was a multi-select, completely erase its selection and do the selection.
-    // remember to set the anchor to none every time the table is resorted
-
-        // required data for each state: anchor, lastAction
-        // IMPORTANT: Anchor is in terms of current coordinates
+    getRelSelectionArrayAndCache(currentMenuState = this.state.currentSelectedMenuItem) {
         let relSelectionArray;
         let relSelectionCache;
-        switch (tableRow.tableType) {
+        switch (currentMenuState) {
         case 'components':
             relSelectionArray = this.componentSelections;
             relSelectionCache = this.componentsSelectedCache;
@@ -237,8 +244,42 @@ class App extends React.Component {
             relSelectionCache = this.modesSelectedCache;
             break;
         default:
-            console.log(`Processing click for unknown table type ${tableRow.tableType}`);
+            console.log(`Getting relevant selection and cache for unknown table type ${currentMenuState}`);
         }
+        return [relSelectionArray, relSelectionCache];
+    }
+
+    handleDeSelectAllButtonPressed() {
+        const shouldSelectAll = this.selectionToggleButtonIsSelectAll();
+        const [relSelectionArray, relSelectionCache] = this.getRelSelectionArrayAndCache();
+        // clear the cache
+        relSelectionCache.length = 0;
+        for (let i = 0; i < relSelectionArray.length; i++) {
+            relSelectionArray[i] = shouldSelectAll;
+            if (shouldSelectAll) relSelectionCache.push(i);
+        }
+        const newDisplayData = this.state.displayData.slice();
+        for (let i = 0; i < newDisplayData.length; i++) {
+            newDisplayData[i].selected = shouldSelectAll;
+        }
+        this.setState({
+            displayData: newDisplayData,
+        });
+    }
+
+    processClick(tableRow, action) {
+    // single select -> deselect everything and only select one. set this to the anchor.
+    // multi select -> toggle the selection on that one. if it is now selected, set it to the anchor.
+    // if it isn't selected. set the anchor to no anchor.
+    // range select -> look at the anchor. if there is no anchor, simply treat this as a multi-select (but without setting another anchor)
+    // if there is an anchor, use it and LEAVE IT THERE.
+    // if the last action was a multi-select, completely erase its selection and do the selection.
+    // remember to set the anchor to none every time the table is resorted
+
+        // required data for each state: anchor, lastAction
+        // IMPORTANT: Anchor is in terms of current coordinates
+        // eslint-disable-next-line prefer-const
+        let [relSelectionArray, relSelectionCache] = this.getRelSelectionArrayAndCache(tableRow.tableType);
         const selectIndex = tableRow.tableIndex;
         // eslint-disable-next-line react/no-access-state-in-setstate
         const newDisplayData = this.state.displayData.slice();
@@ -438,6 +479,7 @@ class App extends React.Component {
             }
             this.setState({
                 displayData: this.recomputeData(),
+                dataLength: this.getRawData().length,
             });
         }
     }
@@ -494,6 +536,11 @@ class App extends React.Component {
         return this.getCurrentNumberOfSelections() === 1;
     }
 
+    selectionToggleButtonIsSelectAll() {
+        // determines whether or not the selection button is select all
+        return this.getCurrentNumberOfSelections() !== this.state.dataLength;
+    }
+
     render() {
         return (
             <div id="masterContainer" className={window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark-theme' : ''}>
@@ -516,8 +563,14 @@ class App extends React.Component {
                     show={this.state.addModalShown}
                     addClicked={(args) => {
                         const curPrototype = getPrototype(this.state.currentSelectedMenuItem).constructor;
-                        if (args.length === curPrototype.describe.length) {
-                            console.log('Adding', args);
+                        console.log(args);
+                        if (args.length === curPrototype.getIds.length) {
+                            const toAddObj = {};
+                            for (let i = 0; i < curPrototype.getIds.length; i++) {
+                                toAddObj[curPrototype.getIds[i]] = cleanseInput(args[i]);
+                            }
+                            console.log(toAddObj);
+                            serverRequestAdd(toAddObj, this.state.currentSelectedMenuItem);
                         }
                         this.setState({
                             addModalShown: false,
@@ -544,6 +597,8 @@ class App extends React.Component {
                                     addModalShown: true,
                                 });
                             }}
+                            performDeSelectAll={this.handleDeSelectAllButtonPressed.bind(this)}
+                            selectionToggleButtonIsSelectAll={this.selectionToggleButtonIsSelectAll()}
                         />
                     </div>
                     <MainTable

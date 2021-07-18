@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as globals from '../globals';
 
-export default async function serverRequestDelete(deletePkids, object) {
+export default async function serverRequestAdd(toAdd, object) {
     let objectUrlPiece;
     switch (object) {
     case 'components':
@@ -17,7 +17,5 @@ export default async function serverRequestDelete(deletePkids, object) {
         console.log(`Server delete request called on unrecognized state ${object}`);
         return;
     }
-    await axios.post(`${globals.rootURL}/${objectUrlPiece}/delete`, {
-        pkids_to_delete: deletePkids,
-    });
+    await axios.post(`${globals.rootURL}/${objectUrlPiece}/add`, toAdd);
 }
