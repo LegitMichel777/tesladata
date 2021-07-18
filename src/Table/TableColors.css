@@ -1,0 +1,17 @@
+:root {
+    --separator: #bababa;
+    --table: #f4f4f4;
+    --table-row-select: #e1e1e1;
+    --tableHeader: #e5e5e5;
+    --tableHeaderShadow: #bcbcbc;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --separator: #404040;
+        --table: #121212;
+        --table-row-select: #242424;
+        --tableHeader: #1b1b1b;
+        --tableHeaderShadow: #0e0e0e;
+    }
+}

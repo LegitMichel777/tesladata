@@ -1,0 +1,13 @@
+:root {
+    --modal-overlay: rgba(1,1,1,0.31);
+    --modal-background: #fbfbfb;
+    --modal-shadow: rgba(1,1,1,0.21);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --modal-overlay: rgba(1,1,1,0.66);
+        --modal-background: #121212;
+        --modal-shadow: rgba(1,1,1,0.72);
+    }
+}

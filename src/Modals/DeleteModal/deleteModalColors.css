@@ -1,0 +1,13 @@
+:root {
+    --delete-modal-cancel-bg: #dfdfdf;
+    --delete-modal-delete-bg: #ffd4d4;
+    --delete-modal-delete: #ff0000;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --delete-modal-cancel-bg: #232323;
+        --delete-modal-delete-bg: #5f0707;
+        --delete-modal-delete: #ff0000;
+    }
+}
