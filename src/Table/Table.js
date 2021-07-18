@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import TableSeparator from './TableSeparator';
 import { getIcon } from '../utils';
+import './TableColors.css';
 
 function TableHeaderItem(props) {
     const iAmSort = props.myId === props.curSortId;

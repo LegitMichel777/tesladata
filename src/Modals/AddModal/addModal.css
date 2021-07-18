@@ -1,7 +1,7 @@
 .modal-add-button {
-    background-color: #BCF9D2;
+    background-color: var(--add-modal-add-bg);
     font-weight: 500;
-    color: #04A21C;
+    color: var(--add-modal-add);
 }
 .modal-add-row {
     display: flex;
@@ -31,22 +31,26 @@
     margin: 0;
     font-size: 18px;
     padding: 0 8px;
-    background-color: #EDEDED;
-    border: 2px #BDBDBD solid;
+    background-color: var(--add-modal-input-bg);
+    border: 2px var(--add-modal-input-outline) solid;
     outline: none;
+    color: var(--text);
 }
 .modal-add-row-input:focus {
-    border: 2px #858585 solid;
+    border: 2px var(--add-modal-input-active-outline) solid;
 }
 .modal-add-row-input-invalid,.modal-add-row-input-invalid:focus {
-    border: 2px #E42727 solid !important;
+    border: 2px var(--add-modal-input-invalid-outline) solid !important;
 }
 #add-modal-error-message {
     height: 16px;
     width: 100%;
     text-align: center;
-    color: #E42727;
+    color: var(--add-modal-input-invalid-outline);
     font-weight: 600;
     font-size: 14px;
     margin-bottom: 9px;
+}
+.modal-add-row-label {
+    color: var(--text)
 }

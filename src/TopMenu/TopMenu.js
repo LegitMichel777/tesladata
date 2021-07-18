@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { getDisplayName, getIcon } from '../utils';
 import './TopMenu.css';
+import './TopMenuColors.css';
 
 function SearchField(props) {
     return (

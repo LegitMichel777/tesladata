@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import ModalShared from '../modal-shared/modalShared';
 import '../modal-shared/modalShared.css';
 import './deleteModal.css';
+import './deleteModalColors.css';
 
 export default function DeleteModal(props) {
     return (

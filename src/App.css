@@ -17,24 +17,6 @@ input::placeholder {
 :root {
     user-select: none;
 
-    --float: #e4e4e4;
-    --searchField: #666666;
-    --segmentedControlHighlight: #cecece;
-    --segmentedHover: #d7d7d7;
-    --segmentedSelectedShadow: #b3b3b3;
-    --separator: #bababa;
-    --table: #f4f4f4;
-    --table-row-select: #e1e1e1;
-    --tableHeader: #e5e5e5;
-    --tableHeaderShadow: #bcbcbc;
-    --topMenuButtonHover: #dadada;
-    --topMenuButtonDisabled: #f3f3f3;
-    --modal-overlay: rgba(1,1,1,0.31);
-    --modal-background: #fbfbfb;
-    --modal-shadow: rgba(1,1,1,0.21);
-    --delete-modal-cancel-bg: #dfdfdf;
-    --delete-modal-delete-bg: #ffd4d4;
-    --delete-modal-delete: #ff0000;
     --text: #000000;
 }
 
@@ -43,24 +25,6 @@ input::placeholder {
         background-color: black;
     }
     :root {
-        --float: #181818;
-        --searchField: #a7a7a7;
-        --segmentedControlHighlight: #303030;
-        --segmentedHover: #242424;
-        --segmentedSelectedShadow: #0c0c0c;
-        --separator: #404040;
-        --table: #121212;
-        --table-row-select: #242424;
-        --tableHeader: #1b1b1b;
-        --tableHeaderShadow: #0e0e0e;
-        --topMenuButtonHover: #292929;
-        --topMenuButtonDisabled: #111111;
-        --modal-overlay: rgba(1,1,1,0.66);
-        --modal-background: #121212;
-        --modal-shadow: rgba(1,1,1,0.72);
-        --delete-modal-cancel-bg: #232323;
-        --delete-modal-delete-bg: #5f0707;
-        --delete-modal-delete: #ff0000;
         --text: #ffffff;
     }
 }

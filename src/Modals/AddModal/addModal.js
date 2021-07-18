@@ -3,84 +3,8 @@ import PropTypes from 'prop-types';
 import ModalShared from '../modal-shared/modalShared';
 import '../modal-shared/modalShared.css';
 import './addModal.css';
-
-function cleanseInput(x) {
-    if (x.length === 0) {
-        return x;
-    }
-    let rturn = x;
-    if (rturn[0] === ' ') {
-        rturn = rturn.substring(1);
-    }
-    if (rturn.length === 0) {
-        return rturn;
-    }
-    if (rturn[rturn.length - 1] === ' ') {
-        rturn = rturn.substring(0, rturn.length - 1);
-    }
-    return rturn;
-}
-
-function validateInput(input, type, requirements) { // return error if there is, return blank for no error
-    let cleanedInput = cleanseInput(input);
-    console.log(requirements);
-    if (requirements.canBeEmpty !== undefined && !requirements.canBeEmpty && cleanedInput === '') {
-        return 'Cannot be empty';
-    }
-    console.log(type);
-    if (type === 'number') {
-        console.log('I got myself a number');
-        console.log(cleanedInput);
-        if (isNaN(cleanedInput)) {
-            console.log('wtf');
-            return 'Must be a number';
-        }
-        cleanedInput = Number.parseFloat(cleanedInput);
-        let requirementsDescription = '';
-        let passesInputValidation = true;
-        if (requirements.moreThanOrEqualTo !== undefined) {
-            requirementsDescription = `Must be more than or equal to ${requirements.moreThanOrEqualTo}`;
-            if (cleanedInput < requirements.moreThanOrEqualTo) {
-                passesInputValidation = false;
-            }
-        } else if (requirements.moreThan !== undefined) {
-            requirementsDescription = `Must be more than ${requirements.moreThan}`;
-            if (cleanedInput <= requirements.moreThan) {
-                passesInputValidation = false;
-            }
-        }
-
-        if (requirements.lessThanOrEqualTo !== undefined) {
-            if (requirementsDescription === '') {
-                requirementsDescription = `Must be more than or equal to ${requirements.moreThanOrEqualTo}`;
-            } else {
-                requirementsDescription = `${requirementsDescription} and less than or equal to ${requirements.lessThanOrEqualTo}`;
-            }
-            if (cleanedInput > requirements.lessThanOrEqualTo) {
-                passesInputValidation = false;
-            }
-        } else if (requirements.lessThan !== undefined) {
-            if (requirementsDescription === '') {
-                requirementsDescription = `Must be more than ${requirements.moreThanOrEqualTo}`;
-            } else {
-                requirementsDescription = `${requirementsDescription} and less than ${requirements.lessThan}`;
-            }
-            if (cleanedInput >= requirements.lessThan) {
-                passesInputValidation = false;
-            }
-        }
-
-        if (passesInputValidation) {
-            return '';
-        }
-        return requirementsDescription;
-    }
-    if (type === 'string') {
-        // nothing yet
-        return '';
-    }
-    return '';
-}
+import './addModalColors.css';
+import validateInput from '../../DataStructs/validateInput';
 
 export default class AddModal extends React.Component {
     initialize(firstTime) {
@@ -142,11 +66,7 @@ export default class AddModal extends React.Component {
                             const currentValue = e.target.value;
                             const newInputIsInvalidState = this.state.inputIsInvalid.slice();
                             console.log(curPrototype.constraints, i);
-                            if (validateInput(currentValue, curPrototype.types[i], curPrototype.constraints[i]) === '') {
-                                newInputIsInvalidState[i] = false;
-                            } else {
-                                newInputIsInvalidState[i] = true;
-                            }
+                            newInputIsInvalidState[i] = validateInput(currentValue, curPrototype.types[i], curPrototype.constraints[i]) !== '';
                             this.setState({
                                 inputIsInvalid: newInputIsInvalidState,
                             });
