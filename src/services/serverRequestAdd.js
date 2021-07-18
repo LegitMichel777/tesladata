@@ -15,7 +15,6 @@ export default async function serverRequestAdd(toAdd, object) {
         break;
     default:
         console.log(`Server delete request called on unrecognized state ${object}`);
-        return;
     }
-    await axios.post(`${globals.rootURL}/${objectUrlPiece}/add`, toAdd);
+    return axios.post(`${globals.rootURL}/${objectUrlPiece}/add`, toAdd);
 }

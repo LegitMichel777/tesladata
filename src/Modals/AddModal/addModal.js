@@ -65,7 +65,6 @@ export default class AddModal extends React.Component {
                         onBlur={(e) => {
                             const currentValue = e.target.value;
                             const newInputIsInvalidState = this.state.inputIsInvalid.slice();
-                            console.log(curPrototype.constraints, i);
                             newInputIsInvalidState[i] = validateInput(currentValue, curPrototype.types[i], curPrototype.constraints[i]) !== '';
                             this.setState({
                                 inputIsInvalid: newInputIsInvalidState,

@@ -6,10 +6,7 @@ export default function validateInput(input, type, requirements) { // return err
         return 'Cannot be empty';
     }
     if (type === 'number') {
-        console.log('I got myself a number');
-        console.log(cleanedInput);
         if (isNaN(cleanedInput)) {
-            console.log('wtf');
             return 'Must be a number';
         }
         cleanedInput = Number.parseFloat(cleanedInput);

@@ -24,14 +24,12 @@ class App extends React.Component {
             httpCall(`${globals.rootURL}/mapping/fetchAll`),
         ];
         await Promise.all(fetchRequests).then((reqsReturn) => {
-            console.log('Got it!');
             const gotComponentsData = reqsReturn[0][0];
             const gotModesData = reqsReturn[1][0];
             const gotFailsData = reqsReturn[2][0];
             this.rawComponentsData = Array(gotComponentsData.length);
             for (let i = 0; i < gotComponentsData.length; i++) {
                 const current = gotComponentsData[i];
-                console.log(current);
                 this.rawComponentsData[i] = new ComponentsData(current.pkid,
                     current.productname,
                     current.manufacturer,
@@ -538,7 +536,28 @@ class App extends React.Component {
 
     selectionToggleButtonIsSelectAll() {
         // determines whether or not the selection button is select all
+        console.log(`And i am asked for select all. ${this.getCurrentNumberOfSelections()} and ${this.state.dataLength}`);
         return this.getCurrentNumberOfSelections() !== this.state.dataLength;
+    }
+
+    createAndAddObject(newDbid, toAddObj, currentState) {
+        const [relSelectionArray] = this.getRelSelectionArrayAndCache(currentState);
+        switch (currentState) {
+        case 'components':
+            this.rawComponentsData.unshift(new ComponentsData(newDbid, toAddObj.productname, toAddObj.manufacturer, toAddObj.contact, toAddObj.failrate));
+            relSelectionArray.unshift(false);
+            break;
+        case 'failures':
+            break;
+        case 'modes':
+            break;
+        default:
+            console.log(`Creating object called on invalid menu item ${currentState}`);
+        }
+        this.setState({
+            displayData: this.recomputeData(),
+            dataLength: this.getRawData().length,
+        });
     }
 
     render() {
@@ -563,14 +582,14 @@ class App extends React.Component {
                     show={this.state.addModalShown}
                     addClicked={(args) => {
                         const curPrototype = getPrototype(this.state.currentSelectedMenuItem).constructor;
-                        console.log(args);
                         if (args.length === curPrototype.getIds.length) {
                             const toAddObj = {};
                             for (let i = 0; i < curPrototype.getIds.length; i++) {
                                 toAddObj[curPrototype.getIds[i]] = cleanseInput(args[i]);
                             }
-                            console.log(toAddObj);
-                            serverRequestAdd(toAddObj, this.state.currentSelectedMenuItem);
+                            serverRequestAdd(toAddObj, this.state.currentSelectedMenuItem).then((res) => {
+                                this.createAndAddObject(res.data[0], toAddObj, this.state.currentSelectedMenuItem);
+                            });
                         }
                         this.setState({
                             addModalShown: false,

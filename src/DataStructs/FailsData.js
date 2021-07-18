@@ -10,7 +10,7 @@ export default class FailsData {
     }
 
     static get describe() {
-        return ['Fail Code', 'Fail Name', 'Failed Component', 'Reason'];
+        return ['Fail Code', 'Fail Name', 'Failed Component', 'Description'];
     }
 
     static get overrideRootDescribe() {

@@ -69,6 +69,7 @@ tr:first-child td:last-child {
     background-color: var(--table);
     margin-top: 20px;
     position: relative;
+    margin-bottom: 50px;
 }
 #TableShadow {
     width: 100%;
