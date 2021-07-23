@@ -11,24 +11,32 @@ import AutocompleteBox from '../../Shared Components/Autocomplete Ribbon/Autocom
 
 export default class AddModal extends React.Component {
     initialize(firstTime) {
-        const inputIsInvalidStateLength = this.props.objectPrototype.constructor.describe.length;
-        const inputIsInvalidState = Array(inputIsInvalidStateLength);
-        const inputFieldValuesState = Array(inputIsInvalidStateLength);
-        for (let i = 0; i < inputIsInvalidStateLength; i++) {
+        const isRootDescribe = (this.props.objectPrototype.constructor.rootDescribe !== undefined);
+        let addModalFields;
+        if (isRootDescribe) {
+            addModalFields=this.props.objectPrototype.constructor.rootDescribe.length;
+        } else {
+            addModalFields=this.props.objectPrototype.constructor.describe.length;
+        }
+        const inputIsInvalidState = Array(addModalFields);
+        const inputFieldValuesState = Array(addModalFields);
+        for (let i = 0; i < addModalFields; i++) {
             inputIsInvalidState[i] = false;
-            inputFieldValuesState[i] = '';
+            inputFieldValuesState[i] = isRootDescribe ? -1 : '';
         }
         if (firstTime) {
             this.state = {
                 inputIsInvalid: inputIsInvalidState,
                 inputFieldValues: inputFieldValuesState,
                 inputInvalidMessage: '',
+                autocompleteSelectedInfo: [],
             };
         } else {
             this.setState({
                 inputIsInvalid: inputIsInvalidState,
                 inputFieldValues: inputFieldValuesState,
                 inputInvalidMessage: '',
+                autocompleteSelectedInfo: [],
             });
         }
     }
@@ -46,11 +54,12 @@ export default class AddModal extends React.Component {
     }
 
     render() {
-        const addChildren = [];
         const curPrototype = this.props.objectPrototype.constructor;
-        let description = (curPrototype.rootDescribe === undefined ? curPrototype.describe : curPrototype.rootDescribe);
+        const isRootDescribe = (curPrototype.rootDescribe !== undefined);
+        const addChildren = [];
+        let description = (isRootDescribe ? curPrototype.rootDescribe : curPrototype.describe);
         for (let i = 0; i < description.length; i++) {
-            if (curPrototype.rootDescribe !== undefined) {
+            if (isRootDescribe) {
                 addChildren.push(
                     <div className="modal-add-row" key={`modal-add-row-${description[i]}`}>
                         <div className="modal-add-row-label">
@@ -59,6 +68,47 @@ export default class AddModal extends React.Component {
                         <AutocompleteBox
                             autocompleteList={this.props.autocompleteList[i]}
                             autocompleteSearch={this.props.autocompleteSearch}
+                            boxRevIndex={description.length-i}
+                            inputIsInvalid={this.state.inputIsInvalid[i]}
+                            inputSelectedId={this.state.inputFieldValues[i]}
+                            setInputInvalid={(val) => {
+                                let newInputIsInvalid = this.state.inputIsInvalid.slice();
+                                newInputIsInvalid[i]=val;
+                                this.setState({
+                                    inputIsInvalid: newInputIsInvalid,
+                                });
+                            }}
+                            setInputSelectedId={(val) => {
+                                let newInputFieldValues = this.state.inputFieldValues.slice();
+                                newInputFieldValues[i]=val;
+                                let newAutocompleteInfo;
+                                let fetchedObject;
+                                switch (curPrototype.rootTypes[i]) {
+                                case "component_pkid":
+                                    fetchedObject = this.props.fetchInfoByIndex('components', val);
+                                    newAutocompleteInfo = {
+                                        main: fetchedObject.productname,
+                                        sub: fetchedObject.manufacturer,
+                                    };
+                                    break;
+                                case "mode_pkid":
+                                    fetchedObject = this.props.fetchInfoByIndex('modes', val);
+                                    newAutocompleteInfo = {
+                                        main: fetchedObject.failname,
+                                        sub: fetchedObject.code,
+                                    };
+                                    break;
+                                default:
+                                    console.log(`Unrecognized root type ${curPrototype.rootTypes}`);
+                                }
+                                let newAutocompleteSelectedInfo = this.state.autocompleteSelectedInfo.slice();
+                                newAutocompleteSelectedInfo[i] = newAutocompleteInfo;
+                                this.setState({
+                                    inputFieldValues: newInputFieldValues,
+                                    autocompleteSelectedInfo: newAutocompleteSelectedInfo,
+                                });
+                            }}
+                            selectedInfo={this.state.autocompleteSelectedInfo[i]}
                         />
                     </div>,
                 );
@@ -107,9 +157,14 @@ export default class AddModal extends React.Component {
                                 onClick={() => {
                                     let encounteredError = false;
                                     let errorMessage = '';
-                                    const newInputIsInvalidState = Array(curPrototype.length);
+                                    const newInputIsInvalidState = Array(isRootDescribe ? curPrototype.rootDescribe.length : curPrototype.describe.length);
                                     for (let i = 0; i < curPrototype.describe.length; i++) {
-                                        const validationResult = validateInput(this.state.inputFieldValues[i], curPrototype.types[i], curPrototype.constraints[i]);
+                                        let validationResult;
+                                        if (isRootDescribe) {
+                                            validationResult = (this.state.inputFieldValues[i] === -1 ? 'Cannot be empty' : '');
+                                        } else {
+                                            validationResult = validateInput(this.state.inputFieldValues[i], curPrototype.types[i], curPrototype.constraints[i]);
+                                        }
                                         if (validationResult !== '' && !encounteredError) {
                                             encounteredError = true;
                                             errorMessage = `Invalid ${curPrototype.describe[i]}: ${validationResult}`;
@@ -146,6 +201,7 @@ AddModal.propTypes = {
     addItemDisplayTitle: PropTypes.string.isRequired,
     addClicked: PropTypes.func.isRequired,
     cancelClicked: PropTypes.func.isRequired,
-    autocompleteList: PropTypes.arrayOf(PropTypes.object).isRequired,
+    autocompleteList: PropTypes.array.isRequired,
     autocompleteSearch: PropTypes.func.isRequired,
+    fetchInfoByIndex: PropTypes.func.isRequired,
 };

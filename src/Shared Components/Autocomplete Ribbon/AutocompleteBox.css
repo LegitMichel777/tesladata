@@ -18,14 +18,14 @@
 .autocomplete-element:first-child {
     padding-top: 10px;
 }
-.autocomplete-element:hover {
+.autocomplete-element:hover,.autocomplete-element-selected {
     background-color: #D6D6D6;
 }
 .autocomplete-box {
     position: relative;
 }
 .autocomplete-element {
-    padding: 5px 9px;
+    padding: 5px 14px 5px 9px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -39,6 +39,15 @@
 }
 .autocomplete-element-text-sub {
     font-size: 13px;
+    font-weight: 500;
+    color: #777777;
+}
+.bordered-input-box-preview-main {
+    font-size: 16px;
+    font-weight: 500;
+}
+.bordered-input-box-preview-sub {
+    font-size: 14px;
     font-weight: 500;
     color: #777777;
 }

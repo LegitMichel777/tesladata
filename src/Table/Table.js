@@ -132,7 +132,7 @@ export default function MainTable(props) {
         tableElements = [
             <tr key="NoDataTableTr">
                 <td id="NoData" colSpan={dataPrototype.getData().length + 1}>
-                                No Data
+                    No Data
                 </td>
             </tr>,
         ];

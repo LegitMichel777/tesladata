@@ -95,7 +95,7 @@ class App extends React.Component {
             let newComponentAutocomplete=[];
             for (let i=0;i<this.rawComponentsData.length;i++) {
                 newComponentAutocomplete.push({
-                    id: this.rawComponentsData[i].pkid,
+                    id: i,
                     main: this.rawComponentsData[i].productname,
                     sub: this.rawComponentsData[i].manufacturer,
                 });
@@ -104,7 +104,7 @@ class App extends React.Component {
             let newModeAutocomplete=[];
             for (let i=0;i<this.rawModesData.length;i++) {
                 newModeAutocomplete.push({
-                    id: this.rawModesData[i].pkid,
+                    id: i,
                     main: this.rawModesData[i].failname,
                     sub: this.rawModesData[i].code,
                 });
@@ -144,7 +144,7 @@ class App extends React.Component {
             deleteModalText: '',
             addModalShown: false,
             dataLength: -1,
-            autocompleteList: [],
+            autocompleteList: [[], [], []],
         };
     }
 
@@ -559,20 +559,19 @@ class App extends React.Component {
 
     selectionToggleButtonIsSelectAll() {
         // determines whether or not the selection button is select all
-        console.log(`And i am asked for select all. ${this.getCurrentNumberOfSelections()} and ${this.state.dataLength}`);
         return this.getCurrentNumberOfSelections() !== this.state.dataLength;
     }
 
     createAndAddObject(newDbid, toAddObj, currentState) {
-        const [relSelectionArray] = this.getRelSelectionArrayAndCache(currentState);
+        const [relSelectionArray, relSelectionCache] = this.getRelSelectionArrayAndCache(currentState);
         switch (currentState) {
         case 'components':
             this.rawComponentsData.unshift(new ComponentsData(newDbid, toAddObj.productname, toAddObj.manufacturer, toAddObj.contact, toAddObj.failrate));
-            relSelectionArray.unshift(false);
             break;
         case 'failures':
             break;
         case 'modes':
+            this.rawModesData.unshift(new ModesData(newDbid, toAddObj.name, toAddObj.code, toAddObj.description));
             break;
         default:
             console.log(`Creating object called on invalid menu item ${currentState}`);
@@ -581,6 +580,24 @@ class App extends React.Component {
             displayData: this.recomputeData(),
             dataLength: this.getRawData().length,
         });
+        relSelectionArray.unshift(false);
+        for (let i=0;i<relSelectionCache.length;i++) {
+            relSelectionCache[i]++;
+        }
+    }
+
+    fetchInfoByIndex(state, index) {
+        switch (state) {
+        case 'components':
+            return this.rawComponentsData[index];
+        case 'failures':
+            return this.rawFailsData[index];
+        case 'modes':
+            return this.rawModesData[index];
+        default:
+            console.log(`Fetch info on index called on invalid menu item ${state}`);
+        }
+        return undefined;
     }
 
     render() {
@@ -629,6 +646,7 @@ class App extends React.Component {
                     autocompleteSearch={() => {
                         console.log("whatever");
                     }}
+                    fetchInfoByIndex={this.fetchInfoByIndex.bind(this)}
                 />
                 <div id="masterInnerContainer">
                     <div id="topMenuContainer">

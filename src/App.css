@@ -28,3 +28,7 @@ input::placeholder {
         --text: #ffffff;
     }
 }
+
+.no-show {
+    display: none !important;
+}
