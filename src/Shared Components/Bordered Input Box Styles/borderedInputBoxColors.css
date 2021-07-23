@@ -1,0 +1,15 @@
+:root {
+    --bordered-input-box-bg: #ededed;
+    --bordered-input-box-outline: #bdbdbd;
+    --bordered-input-box-active-outline: #858585;
+    --bordered-input-box-invalid-outline: #e42727;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bordered-input-box-bg: #252525;
+        --bordered-input-box-outline: #3c3c3c;
+        --bordered-input-box-active-outline: #a9a9a9;
+        --bordered-input-box-invalid-outline: #dc0d0d;
+    }
+}

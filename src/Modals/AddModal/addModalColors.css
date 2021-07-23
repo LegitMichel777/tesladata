@@ -1,19 +1,11 @@
 :root {
     --add-modal-add-bg: #bcf9d2;
     --add-modal-add: #04a21c;
-    --add-modal-input-bg: #ededed;
-    --add-modal-input-outline: #bdbdbd;
-    --add-modal-input-active-outline: #858585;
-    --add-modal-input-invalid-outline: #e42727;
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
         --add-modal-add-bg: #013814;
         --add-modal-add: #00e924;
-        --add-modal-input-bg: #252525;
-        --add-modal-input-outline: #3c3c3c;
-        --add-modal-input-active-outline: #a9a9a9;
-        --add-modal-input-invalid-outline: #dc0d0d;
     }
 }

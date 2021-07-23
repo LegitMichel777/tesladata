@@ -13,8 +13,12 @@ export default class FailsData {
         return ['Fail Code', 'Fail Name', 'Failed Component', 'Description'];
     }
 
-    static get overrideRootDescribe() {
-        return ['component_pkid', 'mode_pkid'];
+    static get rootTypes() {
+        return ['component_pkid', 'mode_pkid']; // this is kinda basic for now, add as things go on. built to be extendable
+    }
+
+    static get rootDescribe() {
+        return ["Failed Product", "Fail Name"];
     }
 
     static get getIds() {
@@ -23,10 +27,6 @@ export default class FailsData {
 
     static get types() {
         return ['string', 'string', 'string', 'string'];
-    }
-
-    static get constraints() {
-        return [{ canBeEmpty: false }, { canBeEmpty: false }, { canBeEmpty: false }, { canBeEmpty: false }];
     }
 
     getData() {

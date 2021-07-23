@@ -24,24 +24,6 @@
 .modal-title-add {
     margin-bottom: 25px;
 }
-.modal-add-row-input {
-    height: 35px;
-    width: 236px;
-    border-radius: 11px;
-    margin: 0;
-    font-size: 18px;
-    padding: 0 8px;
-    background-color: var(--add-modal-input-bg);
-    border: 2px var(--add-modal-input-outline) solid;
-    outline: none;
-    color: var(--text);
-}
-.modal-add-row-input:focus {
-    border: 2px var(--add-modal-input-active-outline) solid;
-}
-.modal-add-row-input-invalid,.modal-add-row-input-invalid:focus {
-    border: 2px var(--add-modal-input-invalid-outline) solid !important;
-}
 #add-modal-error-message {
     height: 16px;
     width: 100%;

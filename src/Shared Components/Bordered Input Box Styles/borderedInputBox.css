@@ -1,0 +1,20 @@
+.bordered-input-box {
+    height: 35px;
+    width: 236px;
+    border-radius: 11px;
+    margin: 0;
+    font-size: 18px;
+    padding: 0 8px;
+    background-color: var(--bordered-input-box-bg);
+    border: 2px var(--bordered-input-box-outline) solid;
+    outline: none;
+    color: var(--text);
+    z-index: 5;
+    position: relative;
+}
+.bordered-input-box:focus {
+    border: 2px var(--bordered-input-box-active-outline) solid;
+}
+.bordered-input-box-invalid,.bordered-input-box-invalid:focus {
+    border: 2px var(--bordered-input-box-invalid-outline) solid !important;
+}

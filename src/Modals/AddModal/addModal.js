@@ -4,7 +4,10 @@ import ModalShared from '../modal-shared/modalShared';
 import '../modal-shared/modalShared.css';
 import './addModal.css';
 import './addModalColors.css';
+import '../../Shared Components/Bordered Input Box Styles/borderedInputBox.css';
+import '../../Shared Components/Bordered Input Box Styles/borderedInputBoxColors.css';
 import validateInput from '../../DataStructs/validateInput';
+import AutocompleteBox from '../../Shared Components/Autocomplete Ribbon/AutocompleteBox';
 
 export default class AddModal extends React.Component {
     initialize(firstTime) {
@@ -45,34 +48,49 @@ export default class AddModal extends React.Component {
     render() {
         const addChildren = [];
         const curPrototype = this.props.objectPrototype.constructor;
-        for (let i = 0; i < curPrototype.describe.length; i++) {
-            addChildren.push(
-                <div className="modal-add-row" key={`modal-add-row-${curPrototype.describe[i]}`}>
-                    <div className="modal-add-row-label">
-                        {curPrototype.describe[i]}
-                    </div>
-                    <input
-                        className={`modal-add-row-input${this.state.inputIsInvalid[i] ? ' modal-add-row-input-invalid' : ''}`}
-                        type="text"
-                        value={this.state.inputFieldValues[i]}
-                        onChange={(val) => {
-                            const newState = this.state.inputFieldValues.slice();
-                            newState[i] = val.target.value;
-                            this.setState({
-                                inputFieldValues: newState,
-                            });
-                        }}
-                        onBlur={(e) => {
-                            const currentValue = e.target.value;
-                            const newInputIsInvalidState = this.state.inputIsInvalid.slice();
-                            newInputIsInvalidState[i] = validateInput(currentValue, curPrototype.types[i], curPrototype.constraints[i]) !== '';
-                            this.setState({
-                                inputIsInvalid: newInputIsInvalidState,
-                            });
-                        }}
-                    />
-                </div>,
-            );
+        let description = (curPrototype.rootDescribe === undefined ? curPrototype.describe : curPrototype.rootDescribe);
+        for (let i = 0; i < description.length; i++) {
+            if (curPrototype.rootDescribe !== undefined) {
+                addChildren.push(
+                    <div className="modal-add-row" key={`modal-add-row-${description[i]}`}>
+                        <div className="modal-add-row-label">
+                            {description[i]}
+                        </div>
+                        <AutocompleteBox
+                            autocompleteList={this.props.autocompleteList[i]}
+                            autocompleteSearch={this.props.autocompleteSearch}
+                        />
+                    </div>,
+                );
+            } else {
+                addChildren.push(
+                    <div className="modal-add-row" key={`modal-add-row-${description[i]}`}>
+                        <div className="modal-add-row-label">
+                            {description[i]}
+                        </div>
+                        <input
+                            className={`bordered-input-box${this.state.inputIsInvalid[i] ? ' bordered-input-box-invalid' : ''}`}
+                            type="text"
+                            value={this.state.inputFieldValues[i]}
+                            onChange={(val) => {
+                                const newState = this.state.inputFieldValues.slice();
+                                newState[i] = val.target.value;
+                                this.setState({
+                                    inputFieldValues: newState,
+                                });
+                            }}
+                            onBlur={(e) => {
+                                const currentValue = e.target.value;
+                                const newInputIsInvalidState = this.state.inputIsInvalid.slice();
+                                newInputIsInvalidState[i] = validateInput(currentValue, curPrototype.types[i], curPrototype.constraints[i]) !== '';
+                                this.setState({
+                                    inputIsInvalid: newInputIsInvalidState,
+                                });
+                            }}
+                        />
+                    </div>,
+                );
+            }
         }
         return (
             <ModalShared
@@ -128,4 +146,6 @@ AddModal.propTypes = {
     addItemDisplayTitle: PropTypes.string.isRequired,
     addClicked: PropTypes.func.isRequired,
     cancelClicked: PropTypes.func.isRequired,
+    autocompleteList: PropTypes.arrayOf(PropTypes.object).isRequired,
+    autocompleteSearch: PropTypes.func.isRequired,
 };

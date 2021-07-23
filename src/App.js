@@ -90,6 +90,28 @@ class App extends React.Component {
             for (let i = 0; i < this.rawFailsData.length; i++) {
                 this.failuresSelections[i] = false;
             }
+
+            // this is temporary
+            let newComponentAutocomplete=[];
+            for (let i=0;i<this.rawComponentsData.length;i++) {
+                newComponentAutocomplete.push({
+                    id: this.rawComponentsData[i].pkid,
+                    main: this.rawComponentsData[i].productname,
+                    sub: this.rawComponentsData[i].manufacturer,
+                });
+            }
+
+            let newModeAutocomplete=[];
+            for (let i=0;i<this.rawModesData.length;i++) {
+                newModeAutocomplete.push({
+                    id: this.rawModesData[i].pkid,
+                    main: this.rawModesData[i].failname,
+                    sub: this.rawModesData[i].code,
+                });
+            }
+            this.setState({
+                autocompleteList: [newComponentAutocomplete, newModeAutocomplete],
+            });
         });
     }
 
@@ -122,6 +144,7 @@ class App extends React.Component {
             deleteModalText: '',
             addModalShown: false,
             dataLength: -1,
+            autocompleteList: [],
         };
     }
 
@@ -602,6 +625,10 @@ class App extends React.Component {
                     }}
                     addItemDisplayTitle={getSingularDisplayName(this.state.currentSelectedMenuItem)}
                     objectPrototype={getPrototype(this.state.currentSelectedMenuItem)}
+                    autocompleteList={this.state.autocompleteList}
+                    autocompleteSearch={() => {
+                        console.log("whatever");
+                    }}
                 />
                 <div id="masterInnerContainer">
                     <div id="topMenuContainer">
