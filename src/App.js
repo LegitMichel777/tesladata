@@ -16,6 +16,7 @@ import { getSingularDisplayName } from './utils';
 import serverRequestAdd from './services/serverRequestAdd';
 import * as globals from './globals';
 import cleanseInput from './DataStructs/cleanseInput';
+import dataSearch from './dataSearch';
 
 class App extends React.Component {
     async fetchStructs() {
@@ -90,28 +91,6 @@ class App extends React.Component {
             for (let i = 0; i < this.rawFailsData.length; i++) {
                 this.failuresSelections[i] = false;
             }
-
-            // this is temporary
-            let newComponentAutocomplete=[];
-            for (let i=0;i<this.rawComponentsData.length;i++) {
-                newComponentAutocomplete.push({
-                    id: i,
-                    main: this.rawComponentsData[i].productname,
-                    sub: this.rawComponentsData[i].manufacturer,
-                });
-            }
-
-            let newModeAutocomplete=[];
-            for (let i=0;i<this.rawModesData.length;i++) {
-                newModeAutocomplete.push({
-                    id: i,
-                    main: this.rawModesData[i].failname,
-                    sub: this.rawModesData[i].code,
-                });
-            }
-            this.setState({
-                autocompleteList: [newComponentAutocomplete, newModeAutocomplete],
-            });
         });
     }
 
@@ -144,7 +123,6 @@ class App extends React.Component {
             deleteModalText: '',
             addModalShown: false,
             dataLength: -1,
-            autocompleteList: [[], [], []],
         };
     }
 
@@ -642,9 +620,55 @@ class App extends React.Component {
                     }}
                     addItemDisplayTitle={getSingularDisplayName(this.state.currentSelectedMenuItem)}
                     objectPrototype={getPrototype(this.state.currentSelectedMenuItem)}
-                    autocompleteList={this.state.autocompleteList}
-                    autocompleteSearch={() => {
-                        console.log("whatever");
+                    autocompleteSearch={(state, key) => {
+                        let columnName;
+                        let rawData;
+                        switch (state) {
+                        case 'components':
+                            columnName='productname';
+                            rawData = this.rawComponentsData;
+                            break;
+                        case 'modes':
+                            columnName='name';
+                            rawData = this.rawModesData;
+                            break;
+                        default:
+                            console.log(`Fetching default search column name for unknown state ${state}`);
+                            return [];
+                        }
+                        let searchResults = dataSearch(rawData, columnName, key);
+                        switch (state) {
+                        case 'components':
+                            searchResults.sort((a, b) => {
+                                if (a.data.productname > b.data.productname) {
+                                    return 1;
+                                }
+                                if (a.data.productname < b.data.productname) {
+                                    return -1;
+                                }
+                                if (a.data.manufacturer > b.data.manufacturer) {
+                                    return 1;
+                                }
+                                return -1;
+                            });
+                            break;
+                        case 'modes':
+                            searchResults.sort((a, b) => {
+                                if (a.data.failname > b.data.failname) {
+                                    return 1;
+                                }
+                                if (a.data.failname < b.data.failname) {
+                                    return -1;
+                                }
+                                if (a.data.code > b.data.code) {
+                                    return 1;
+                                }
+                                return -1;
+                            });
+                            break;
+                        default:
+                        }
+                        return searchResults;
                     }}
                     fetchInfoByIndex={this.fetchInfoByIndex.bind(this)}
                 />

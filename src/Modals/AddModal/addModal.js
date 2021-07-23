@@ -66,8 +66,44 @@ export default class AddModal extends React.Component {
                             {description[i]}
                         </div>
                         <AutocompleteBox
-                            autocompleteList={this.props.autocompleteList[i]}
-                            autocompleteSearch={this.props.autocompleteSearch}
+                            autocompleteSearch={(val) => {
+                                let translatedName;
+                                switch (curPrototype.rootTypes[i]) {
+                                case "component_pkid":
+                                    translatedName = 'components';
+                                    break;
+                                case 'mode_pkid':
+                                    translatedName = 'modes';
+                                    break;
+                                default:
+                                    console.log(`Translated name requested for unknown root type ${curPrototype.rootTypes[i]}`);
+                                    return [];
+                                }
+                                let sortedSearchResults = this.props.autocompleteSearch(translatedName, val);
+                                let autocompleteList=[];
+                                switch (curPrototype.rootTypes[i]) {
+                                case "component_pkid":
+                                    for (let j=0;j<sortedSearchResults.length;j++) {
+                                        autocompleteList.push({
+                                            main: sortedSearchResults[j].data.productname,
+                                            sub: sortedSearchResults[j].data.manufacturer,
+                                            id: sortedSearchResults[j].index,
+                                        });
+                                    }
+                                    break;
+                                case 'mode_pkid':
+                                    for (let j=0;j<sortedSearchResults.length;j++) {
+                                        autocompleteList.push({
+                                            main: sortedSearchResults[j].data.failname,
+                                            sub: sortedSearchResults[j].data.code,
+                                            id: sortedSearchResults[j].index,
+                                        });
+                                    }
+                                    break;
+                                default:
+                                }
+                                return autocompleteList;
+                            }}
                             boxRevIndex={description.length-i}
                             inputIsInvalid={this.state.inputIsInvalid[i]}
                             inputSelectedId={this.state.inputFieldValues[i]}
@@ -201,7 +237,6 @@ AddModal.propTypes = {
     addItemDisplayTitle: PropTypes.string.isRequired,
     addClicked: PropTypes.func.isRequired,
     cancelClicked: PropTypes.func.isRequired,
-    autocompleteList: PropTypes.array.isRequired,
     autocompleteSearch: PropTypes.func.isRequired,
     fetchInfoByIndex: PropTypes.func.isRequired,
 };

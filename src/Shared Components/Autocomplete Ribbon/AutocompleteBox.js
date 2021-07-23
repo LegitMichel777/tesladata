@@ -9,26 +9,27 @@ export default class AutocompleteBox extends React.Component {
         this.state={
             isFocused: false,
             boxText: "",
+            autocompleteList: [],
         };
     }
 
     render() {
         let autocompleteMainChildren = [];
-        if (this.props.autocompleteList !== undefined) {
-            for (let i = 0; i < this.props.autocompleteList.length; i++) {
+        if (this.state.autocompleteList !== undefined) {
+            for (let i = 0; i < this.state.autocompleteList.length; i++) {
                 autocompleteMainChildren.push(
                     <div
-                        className={`autocomplete-element${this.props.inputSelectedId === this.props.autocompleteList[i].id ? " autocomplete-element-selected" : ""}`}
+                        className={`autocomplete-element${this.props.inputSelectedId === this.state.autocompleteList[i].id ? " autocomplete-element-selected" : ""}`}
                         onMouseDown={() => {
-                            this.props.setInputSelectedId(this.props.autocompleteList[i].id);
+                            this.props.setInputSelectedId(this.state.autocompleteList[i].id);
                         }}
-                        key={`autocomplete-element-${this.props.autocompleteList[i].id}`}
+                        key={`autocomplete-element-${this.state.autocompleteList[i].id}`}
                     >
                         <div className="autocomplete-element-text-main">
-                            {this.props.autocompleteList[i].main}
+                            {this.state.autocompleteList[i].main}
                         </div>
                         <div className="autocomplete-element-text-sub">
-                            {this.props.autocompleteList[i].sub}
+                            {this.state.autocompleteList[i].sub}
                         </div>
                     </div>,
                 );
@@ -43,11 +44,13 @@ export default class AutocompleteBox extends React.Component {
                     onChange={(e) => {
                         this.setState({
                             boxText: e.target.value,
+                            autocompleteList: this.props.autocompleteSearch(e.target.value),
                         });
                     }}
                     onFocus={() => {
                         this.setState({
                             isFocused: true,
+                            autocompleteList: this.props.autocompleteSearch(''),
                         });
                     }}
                     onBlur={() => {
@@ -71,7 +74,7 @@ export default class AutocompleteBox extends React.Component {
                         { this.props.selectedInfo === undefined ? "" : this.props.selectedInfo.sub }
                     </div>
                 </div>
-                <div className={`autocomplete-overlay${this.state.isFocused ? "" : " no-show"}`} style={{ zIndex: 2*this.props.boxRevIndex+1 }}>
+                <div className={`autocomplete-overlay${this.state.isFocused&&(this.state.autocompleteList===null ? true : this.state.autocompleteList.length>0) ? "" : " no-show"}`} style={{ zIndex: 2*this.props.boxRevIndex+1 }}>
                     <div className="autocomplete-main">
                         {autocompleteMainChildren}
                     </div>
@@ -82,13 +85,13 @@ export default class AutocompleteBox extends React.Component {
 }
 
 AutocompleteBox.propTypes = {
-    autocompleteList: PropTypes.arrayOf(PropTypes.object).isRequired,
     boxRevIndex: PropTypes.number.isRequired,
     inputIsInvalid: PropTypes.bool.isRequired,
     inputSelectedId: PropTypes.any.isRequired,
     setInputInvalid: PropTypes.func.isRequired,
     setInputSelectedId: PropTypes.func.isRequired,
     selectedInfo: PropTypes.object,
+    autocompleteSearch: PropTypes.func.isRequired,
 };
 AutocompleteBox.defaultProps = {
     selectedInfo: {},
