@@ -13,6 +13,13 @@ export default class AutocompleteBox extends React.Component {
         };
     }
 
+    componentDidUpdate() {
+        if (this.props.inputSelectedId !== -1 && this.props.selectedInfo.index !== this.props.inputSelectedId) {
+            console.log(`Input ID shows ${this.props.inputSelectedId}, selected info shows ${this.props.selectedInfo.index}`);
+            this.props.setInputSelectedId(this.props.inputSelectedId);
+        }
+    }
+
     render() {
         let autocompleteMainChildren = [];
         if (this.state.autocompleteList !== undefined) {

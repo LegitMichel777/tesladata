@@ -21,6 +21,10 @@ export default class FailsData {
         return ["Failed Component", "Fail Name"];
     }
 
+    getRootData() {
+        return [this.failComponentId, this.failModeId];
+    }
+
     static get getIds() {
         return ['failedcomponent', 'failname', 'code', 'reason'];
     }

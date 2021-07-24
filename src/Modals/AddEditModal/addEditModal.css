@@ -1,0 +1,48 @@
+.modal-add-button {
+    background-color: var(--addedit-modal-add-bg);
+    font-weight: 500;
+    color: var(--addedit-modal-add);
+}
+.modal-edit-button {
+    background-color: var(--addedit-modal-edit-bg);
+    font-weight: 500;
+    color: var(--addedit-modal-edit);
+}
+.modal-addedit-row {
+    display: flex;
+    margin-bottom: 15px;
+    align-items: center;
+}
+.modal-addedit-row-label {
+    width: 200px;
+    font-size: 18px;
+    font-weight: bold;
+}
+#addedit-modal-create-list {
+    margin-bottom: 2px;
+}
+.inner-modal-addedit {
+    padding: 50px 72px;
+    font-size: 18px;
+    font-weight: 500;
+}
+.modal-title-addedit {
+    margin-bottom: 25px;
+}
+#addedit-modal-error-message {
+    height: 16px;
+    width: 100%;
+    text-align: center;
+    color: var(--addedit-modal-input-invalid-outline);
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 9px;
+}
+.modal-addedit-row-label {
+    color: var(--text)
+}
+.modal-edit-sub {
+    font-size: 14px;
+    font-weight: bold;
+    padding-top: 8px;
+}

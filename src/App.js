@@ -11,7 +11,7 @@ import MainTable from './Table/Table';
 import TopMenu from './TopMenu/TopMenu';
 import httpCall from './services/httpCall';
 import DeleteModal from './Modals/DeleteModal/deleteModal';
-import AddModal from './Modals/AddModal/addModal';
+import AddEditModal from './Modals/AddEditModal/addEditModal';
 import { getDisplayName, getSingularDisplayName } from './utils';
 import serverRequestAdd from './services/serverRequestAdd';
 import * as globals from './globals';
@@ -19,6 +19,7 @@ import cleanseInput from './DataStructs/cleanseInput';
 import dataSearch from './dataSearch';
 import rootTypeToState from './DataStructs/rootTypeToState';
 import getCorrespondingDisplayNameOfColumnId from './DataStructs/getCorrespondingDisplayNameOfColumnId';
+import autocompleteSearch from './autocompleteSearch';
 
 class App extends React.Component {
     async fetchStructs() {
@@ -132,6 +133,8 @@ class App extends React.Component {
                 modes: 'name',
             },
             searchContents: "",
+            editModalShown: false,
+            additionalEditInfo: {},
         };
     }
 
@@ -310,7 +313,9 @@ class App extends React.Component {
             const dbIndex = this.currentSortToDbMapping[selectIndex];
             relSelectionArray[dbIndex] = true;
             for (let i = 0; i < relSelectionCache.length; i++) {
-                newDisplayData[this.currentDbToSortMapping[relSelectionCache[i]]].selected = false;
+                if (this.currentDbToSortMapping[relSelectionCache[i]] !== undefined) {
+                    newDisplayData[this.currentDbToSortMapping[relSelectionCache[i]]].selected = false;
+                }
             }
             newDisplayData[selectIndex].selected = true;
             relSelectionCache = [dbIndex];
@@ -625,9 +630,10 @@ class App extends React.Component {
                         });
                     }}
                 />
-                <AddModal
+                <AddEditModal
+                    modalType="add"
                     show={this.state.addModalShown}
-                    addClicked={(args) => {
+                    submitClicked={(args) => {
                         const curPrototype = getPrototype(this.state.currentSelectedMenuItem).constructor;
                         const isRootType = curPrototype.rootDescribe !== undefined;
                         const identifiers = isRootType ? curPrototype.rootTypes : curPrototype.getIds;
@@ -651,57 +657,43 @@ class App extends React.Component {
                     }}
                     addItemDisplayTitle={getSingularDisplayName(this.state.currentSelectedMenuItem)}
                     objectPrototype={getPrototype(this.state.currentSelectedMenuItem)}
-                    autocompleteSearch={(state, key) => {
-                        let columnName;
-                        let rawData;
-                        switch (state) {
-                        case 'components':
-                            columnName='productname';
-                            rawData = this.rawComponentsData;
-                            break;
-                        case 'modes':
-                            columnName='name';
-                            rawData = this.rawModesData;
-                            break;
-                        default:
-                            console.log(`Fetching default search column name for unknown state ${state}`);
-                            return [];
-                        }
-                        let searchResults = dataSearch(rawData, columnName, key);
-                        switch (state) {
-                        case 'components':
-                            searchResults.sort((a, b) => {
-                                if (a.data.productname > b.data.productname) {
-                                    return 1;
-                                }
-                                if (a.data.productname < b.data.productname) {
-                                    return -1;
-                                }
-                                if (a.data.manufacturer > b.data.manufacturer) {
-                                    return 1;
-                                }
-                                return -1;
-                            });
-                            break;
-                        case 'modes':
-                            searchResults.sort((a, b) => {
-                                if (a.data.failname > b.data.failname) {
-                                    return 1;
-                                }
-                                if (a.data.failname < b.data.failname) {
-                                    return -1;
-                                }
-                                if (a.data.code > b.data.code) {
-                                    return 1;
-                                }
-                                return -1;
-                            });
-                            break;
-                        default:
-                        }
-                        return searchResults;
-                    }}
+                    autocompleteSearch={autocompleteSearch.bind(this)}
                     fetchInfoByIndex={this.fetchInfoByIndex.bind(this)}
+                    additionalEditInfo={{}}
+                />
+                <AddEditModal
+                    modalType="edit"
+                    show={this.state.editModalShown}
+                    submitClicked={(args) => {
+                        console.log(args);
+                        /*
+                        const curPrototype = getPrototype(this.state.currentSelectedMenuItem).constructor;
+                        const isRootType = curPrototype.rootDescribe !== undefined;
+                        const identifiers = isRootType ? curPrototype.rootTypes : curPrototype.getIds;
+                        if (args.length === identifiers.length) {
+                            const toAddObj = {};
+                            for (let i = 0; i < identifiers.length; i++) {
+                                toAddObj[identifiers[i]] = isRootType ? this.fetchInfoByIndex(rootTypeToState(curPrototype.rootTypes[i]), args[i]).dbid : cleanseInput(args[i]);
+                            }
+                            serverRequestAdd(toAddObj, this.state.currentSelectedMenuItem).then((res) => {
+                                this.createAndAddObject(res.data[0], toAddObj, this.state.currentSelectedMenuItem);
+                            });
+                        }
+                         */
+                        this.setState({
+                            editModalShown: false,
+                        });
+                    }}
+                    cancelClicked={() => {
+                        this.setState({
+                            editModalShown: false,
+                        });
+                    }}
+                    addItemDisplayTitle={getSingularDisplayName(this.state.currentSelectedMenuItem)}
+                    objectPrototype={getPrototype(this.state.currentSelectedMenuItem)}
+                    autocompleteSearch={autocompleteSearch.bind(this)}
+                    fetchInfoByIndex={this.fetchInfoByIndex.bind(this)}
+                    additionalEditInfo={this.state.additionalEditInfo}
                 />
                 <div id="masterInnerContainer">
                     <div id="topMenuContainer">
@@ -714,6 +706,65 @@ class App extends React.Component {
                             performAdd={() => {
                                 this.setState({
                                     addModalShown: true,
+                                });
+                            }}
+                            performEdit={() => {
+                                let [selectionCache, rawData, , relatedFailureDeletions] = this.getSelectedDetails();
+                                if (selectionCache.length !== 1) {
+                                    return;
+                                }
+                                let editIndex=selectionCache[0];
+                                let name;
+                                switch (this.state.currentSelectedMenuItem) {
+                                case 'components':
+                                    name=rawData[editIndex].productname;
+                                    break;
+                                case 'failures':
+                                    name='Failure';
+                                    break;
+                                case 'mode':
+                                    name=rawData[editIndex].failname;
+                                    break;
+                                default:
+                                    console.log(`Perform edit called on unexpected state ${this.state.currentSelectedMenuItem}`);
+                                }
+                                let sub=`Database ID ${rawData[editIndex].dbid}`;
+                                if (relatedFailureDeletions.length>0) {
+                                    sub=`${sub} • ${getSingularDisplayName(this.state.currentSelectedMenuItem)} associated with ${relatedFailureDeletions.length} Mapping${relatedFailureDeletions.length>1 ? "s" : ""}`;
+                                }
+                                let isRootType = rawData[editIndex].constructor.rootDescribe !== undefined;
+                                let rootData=[];
+                                if (isRootType) {
+                                    let types=rawData[editIndex].constructor.rootTypes;
+                                    let rawRootData=rawData[editIndex].getRootData();
+                                    for (let i=0;i<types.length;i++) {
+                                        if (types[i]==='component_pkid' || types[i]==='mode_pkid') {
+                                            let match = -1;
+                                            let rawMatchData=(types[i]==='component_pkid' ? this.rawComponentsData : this.rawModesData);
+                                            for (let j=0;j<rawMatchData.length;j++) {
+                                                if (rawMatchData[j].dbid === rawRootData[i]) {
+                                                    match=j;
+                                                    break;
+                                                }
+                                            }
+                                            if (match === -1) {
+                                                console.log(`Failed to load edit view, couldn't find ${types[i]==='component_pkid' ? 'Component' : 'Mode'} with database ID ${rawRootData[i]}`);
+                                                return;
+                                            }
+                                            rootData.push(match);
+                                        } else {
+                                            console.log(`Unrecognized root type ${types[i]}`);
+                                        }
+                                    }
+                                }
+                                this.setState({
+                                    editModalShown: true,
+                                    additionalEditInfo: {
+                                        index: editIndex,
+                                        name: name,
+                                        sub: sub,
+                                        data: isRootType ? rootData : rawData[editIndex].getData(),
+                                    },
                                 });
                             }}
                             performDeSelectAll={this.handleDeSelectAllButtonPressed.bind(this)}

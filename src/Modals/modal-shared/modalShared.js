@@ -19,5 +19,5 @@ ModalShared.propTypes = {
     show: PropTypes.bool.isRequired,
     modalBody: PropTypes.arrayOf(PropTypes.object).isRequired,
     stylingId: PropTypes.string.isRequired,
-    modalTitle: PropTypes.string.isRequired,
+    modalTitle: PropTypes.any.isRequired,
 };

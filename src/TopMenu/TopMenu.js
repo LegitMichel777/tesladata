@@ -93,7 +93,7 @@ export default class TopMenu extends React.Component {
                             imgId="editIcon"
                             disabled={!this.props.editEnabled}
                             onClick={() => {
-                                console.log('Edit clicked! Do something.');
+                                this.props.performEdit();
                             }}
                         />
                         <TopMenuButton
@@ -150,6 +150,7 @@ TopMenu.propTypes = {
     deleteEnabled: PropTypes.bool.isRequired,
     performDelete: PropTypes.func.isRequired,
     performAdd: PropTypes.func.isRequired,
+    performEdit: PropTypes.func.isRequired,
     performDeSelectAll: PropTypes.func.isRequired,
     currentSelectedMenuItem: PropTypes.string.isRequired,
     selectionToggleButtonIsSelectAll: PropTypes.bool.isRequired,

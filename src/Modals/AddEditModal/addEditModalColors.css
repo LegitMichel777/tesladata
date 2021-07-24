@@ -1,0 +1,15 @@
+:root {
+    --addedit-modal-add-bg: #bcf9d2;
+    --addedit-modal-add: #04a21c;
+    --addedit-modal-edit-bg: #B8D8FF;
+    --addedit-modal-edit: #0966FF;
+    --addedit-modal-input-invalid-outline: #e42727;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --addedit-modal-add-bg: #013814;
+        --addedit-modal-add: #00e924;
+        --addedit-modal-input-invalid-outline: #dc0d0d;
+    }
+}
