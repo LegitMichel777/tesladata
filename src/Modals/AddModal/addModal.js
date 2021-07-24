@@ -7,7 +7,7 @@ import './addModalColors.css';
 import '../../Shared Components/Bordered Input Box Styles/borderedInputBox.css';
 import '../../Shared Components/Bordered Input Box Styles/borderedInputBoxColors.css';
 import validateInput from '../../DataStructs/validateInput';
-import AutocompleteBox from '../../Shared Components/Autocomplete Ribbon/AutocompleteBox';
+import AutocompleteBox from '../../Shared Components/Autocomplete Box/AutocompleteBox';
 
 export default class AddModal extends React.Component {
     initialize(firstTime) {

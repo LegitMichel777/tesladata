@@ -2,7 +2,6 @@ export default function dataSearch(rawData, column, key) {
     if (rawData === []) {
         return [];
     }
-    console.log(rawData[0]);
     let curPrototypeIds = rawData[0].constructor.getIds;
     let searchIndex = -1;
     for (let i=0;i<curPrototypeIds.length;i++) {

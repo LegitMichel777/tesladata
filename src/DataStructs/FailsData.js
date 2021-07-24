@@ -10,7 +10,7 @@ export default class FailsData {
     }
 
     static get describe() {
-        return ['Fail Code', 'Fail Name', 'Failed Component', 'Description'];
+        return ['Failed Component', 'Fail Name', 'Fail Code', 'Description'];
     }
 
     static get rootTypes() {
@@ -18,11 +18,11 @@ export default class FailsData {
     }
 
     static get rootDescribe() {
-        return ["Failed Product", "Fail Name"];
+        return ["Failed Component", "Fail Name"];
     }
 
     static get getIds() {
-        return ['code', 'failname', 'failedcomponent', 'reason'];
+        return ['failedcomponent', 'failname', 'code', 'reason'];
     }
 
     static get types() {
@@ -30,6 +30,6 @@ export default class FailsData {
     }
 
     getData() {
-        return [this.failCode, this.failModeName, this.failComponentName, this.failDescription];
+        return [this.failComponentName, this.failModeName, this.failCode, this.failDescription];
     }
 }

@@ -17,6 +17,7 @@ import serverRequestAdd from './services/serverRequestAdd';
 import * as globals from './globals';
 import cleanseInput from './DataStructs/cleanseInput';
 import dataSearch from './dataSearch';
+import rootTypeToState from './DataStructs/rootTypeToState';
 
 class App extends React.Component {
     async fetchStructs() {
@@ -346,9 +347,6 @@ class App extends React.Component {
                         i--;
                     }
                 }
-                console.log('Trying to erase ');
-                console.log(eraseL);
-                console.log(eraseR);
             }
             const l = Math.min(selectIndex, this.selectionAnchor);
             const r = Math.max(selectIndex, this.selectionAnchor);
@@ -359,9 +357,6 @@ class App extends React.Component {
                 relSelectionArray[this.currentSortToDbMapping[i]] = true;
                 newDisplayData[i].selected = true;
             }
-            console.log('range selecting');
-            console.log(l);
-            console.log(r);
             this.selectionLastAction = {
                 action: 'range',
                 params: selectIndex,
@@ -542,11 +537,27 @@ class App extends React.Component {
 
     createAndAddObject(newDbid, toAddObj, currentState) {
         const [relSelectionArray, relSelectionCache] = this.getRelSelectionArrayAndCache(currentState);
+        let linkedComponentIndex=-1;
+        let linkedModeIndex=-1;
         switch (currentState) {
         case 'components':
             this.rawComponentsData.unshift(new ComponentsData(newDbid, toAddObj.productname, toAddObj.manufacturer, toAddObj.contact, toAddObj.failrate));
             break;
         case 'failures':
+            for (let i=0;i<this.rawComponentsData.length;i++) {
+                if (this.rawComponentsData[i].dbid===toAddObj.component_pkid) {
+                    linkedComponentIndex=i;
+                }
+            }
+            for (let i=0;i<this.rawModesData.length;i++) {
+                if (this.rawModesData[i].dbid===toAddObj.mode_pkid) {
+                    linkedModeIndex=i;
+                }
+            }
+            if (linkedComponentIndex===-1||linkedModeIndex===-1) {
+                return;
+            }
+            this.rawFailsData.unshift(new FailsData(newDbid, toAddObj.component_pkid, this.rawComponentsData[linkedComponentIndex].productname, toAddObj.mode_pkid, this.rawModesData[linkedModeIndex].failname, this.rawModesData[linkedModeIndex].code, this.rawModesData[linkedModeIndex].description));
             break;
         case 'modes':
             this.rawModesData.unshift(new ModesData(newDbid, toAddObj.name, toAddObj.code, toAddObj.description));
@@ -575,7 +586,7 @@ class App extends React.Component {
         default:
             console.log(`Fetch info on index called on invalid menu item ${state}`);
         }
-        return undefined;
+        return null;
     }
 
     render() {
@@ -599,11 +610,13 @@ class App extends React.Component {
                 <AddModal
                     show={this.state.addModalShown}
                     addClicked={(args) => {
+                        const isRootType = getPrototype(this.state.currentSelectedMenuItem).constructor.rootDescribe !== null;
                         const curPrototype = getPrototype(this.state.currentSelectedMenuItem).constructor;
-                        if (args.length === curPrototype.getIds.length) {
+                        const identifiers = isRootType ? curPrototype.rootTypes : curPrototype.getIds;
+                        if (args.length === identifiers.length) {
                             const toAddObj = {};
-                            for (let i = 0; i < curPrototype.getIds.length; i++) {
-                                toAddObj[curPrototype.getIds[i]] = cleanseInput(args[i]);
+                            for (let i = 0; i < identifiers.length; i++) {
+                                toAddObj[identifiers[i]] = isRootType ? this.fetchInfoByIndex(rootTypeToState(curPrototype.rootTypes[i]), args[i]).dbid : cleanseInput(args[i]);
                             }
                             serverRequestAdd(toAddObj, this.state.currentSelectedMenuItem).then((res) => {
                                 this.createAndAddObject(res.data[0], toAddObj, this.state.currentSelectedMenuItem);
