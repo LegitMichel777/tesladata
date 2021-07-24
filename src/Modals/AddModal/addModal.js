@@ -48,7 +48,7 @@ export default class AddModal extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        if (prevProps.show !== this.props.show) {
+        if (prevProps.objectPrototype !== this.props.objectPrototype || prevProps.show !== this.props.show) {
             this.initialize(false);
         }
     }
@@ -58,124 +58,126 @@ export default class AddModal extends React.Component {
         const isRootDescribe = (curPrototype.rootDescribe !== undefined);
         const addChildren = [];
         let description = (isRootDescribe ? curPrototype.rootDescribe : curPrototype.describe);
-        for (let i = 0; i < description.length; i++) {
-            if (isRootDescribe) {
-                addChildren.push(
-                    <div className="modal-add-row" key={`modal-add-row-${description[i]}`}>
-                        <div className="modal-add-row-label">
-                            {description[i]}
-                        </div>
-                        <AutocompleteBox
-                            autocompleteSearch={(val) => {
-                                let translatedName;
-                                switch (curPrototype.rootTypes[i]) {
-                                case "component_pkid":
-                                    translatedName = 'components';
-                                    break;
-                                case 'mode_pkid':
-                                    translatedName = 'modes';
-                                    break;
-                                default:
-                                    console.log(`Translated name requested for unknown root type ${curPrototype.rootTypes[i]}`);
-                                    return [];
-                                }
-                                let sortedSearchResults = this.props.autocompleteSearch(translatedName, val);
-                                let autocompleteList=[];
-                                switch (curPrototype.rootTypes[i]) {
-                                case "component_pkid":
-                                    for (let j=0;j<sortedSearchResults.length;j++) {
-                                        autocompleteList.push({
-                                            main: sortedSearchResults[j].data.productname,
-                                            sub: sortedSearchResults[j].data.manufacturer,
-                                            id: sortedSearchResults[j].index,
-                                        });
+        if (this.props.show) {
+            for (let i = 0; i < description.length; i++) {
+                if (isRootDescribe) {
+                    addChildren.push(
+                        <div className="modal-add-row" key={`modal-add-row-${description[i]}`}>
+                            <div className="modal-add-row-label">
+                                {description[i]}
+                            </div>
+                            <AutocompleteBox
+                                autocompleteSearch={(val) => {
+                                    let translatedName;
+                                    switch (curPrototype.rootTypes[i]) {
+                                    case "component_pkid":
+                                        translatedName = 'components';
+                                        break;
+                                    case 'mode_pkid':
+                                        translatedName = 'modes';
+                                        break;
+                                    default:
+                                        console.log(`Translated name requested for unknown root type ${curPrototype.rootTypes[i]}`);
+                                        return [];
                                     }
-                                    break;
-                                case 'mode_pkid':
-                                    for (let j=0;j<sortedSearchResults.length;j++) {
-                                        autocompleteList.push({
-                                            main: sortedSearchResults[j].data.failname,
-                                            sub: sortedSearchResults[j].data.code,
-                                            id: sortedSearchResults[j].index,
-                                        });
+                                    let sortedSearchResults = this.props.autocompleteSearch(translatedName, val);
+                                    let autocompleteList = [];
+                                    switch (curPrototype.rootTypes[i]) {
+                                    case "component_pkid":
+                                        for (let j = 0; j < sortedSearchResults.length; j++) {
+                                            autocompleteList.push({
+                                                main: sortedSearchResults[j].data.productname,
+                                                sub: sortedSearchResults[j].data.manufacturer,
+                                                id: sortedSearchResults[j].index,
+                                            });
+                                        }
+                                        break;
+                                    case 'mode_pkid':
+                                        for (let j = 0; j < sortedSearchResults.length; j++) {
+                                            autocompleteList.push({
+                                                main: sortedSearchResults[j].data.failname,
+                                                sub: sortedSearchResults[j].data.code,
+                                                id: sortedSearchResults[j].index,
+                                            });
+                                        }
+                                        break;
+                                    default:
                                     }
-                                    break;
-                                default:
-                                }
-                                return autocompleteList;
-                            }}
-                            boxRevIndex={description.length-i}
-                            inputIsInvalid={this.state.inputIsInvalid[i]}
-                            inputSelectedId={this.state.inputFieldValues[i]}
-                            setInputInvalid={(val) => {
-                                let newInputIsInvalid = this.state.inputIsInvalid.slice();
-                                newInputIsInvalid[i]=val;
-                                this.setState({
-                                    inputIsInvalid: newInputIsInvalid,
-                                });
-                            }}
-                            setInputSelectedId={(val) => {
-                                let newInputFieldValues = this.state.inputFieldValues.slice();
-                                newInputFieldValues[i]=val;
-                                let newAutocompleteInfo;
-                                let fetchedObject;
-                                switch (curPrototype.rootTypes[i]) {
-                                case "component_pkid":
-                                    fetchedObject = this.props.fetchInfoByIndex('components', val);
-                                    newAutocompleteInfo = {
-                                        main: fetchedObject.productname,
-                                        sub: fetchedObject.manufacturer,
-                                    };
-                                    break;
-                                case "mode_pkid":
-                                    fetchedObject = this.props.fetchInfoByIndex('modes', val);
-                                    newAutocompleteInfo = {
-                                        main: fetchedObject.failname,
-                                        sub: fetchedObject.code,
-                                    };
-                                    break;
-                                default:
-                                    console.log(`Unrecognized root type ${curPrototype.rootTypes}`);
-                                }
-                                let newAutocompleteSelectedInfo = this.state.autocompleteSelectedInfo.slice();
-                                newAutocompleteSelectedInfo[i] = newAutocompleteInfo;
-                                this.setState({
-                                    inputFieldValues: newInputFieldValues,
-                                    autocompleteSelectedInfo: newAutocompleteSelectedInfo,
-                                });
-                            }}
-                            selectedInfo={this.state.autocompleteSelectedInfo[i]}
-                        />
-                    </div>,
-                );
-            } else {
-                addChildren.push(
-                    <div className="modal-add-row" key={`modal-add-row-${description[i]}`}>
-                        <div className="modal-add-row-label">
-                            {description[i]}
-                        </div>
-                        <input
-                            className={`bordered-input-box${this.state.inputIsInvalid[i] ? ' bordered-input-box-invalid' : ''}`}
-                            type="text"
-                            value={this.state.inputFieldValues[i]}
-                            onChange={(val) => {
-                                const newState = this.state.inputFieldValues.slice();
-                                newState[i] = val.target.value;
-                                this.setState({
-                                    inputFieldValues: newState,
-                                });
-                            }}
-                            onBlur={(e) => {
-                                const currentValue = e.target.value;
-                                const newInputIsInvalidState = this.state.inputIsInvalid.slice();
-                                newInputIsInvalidState[i] = validateInput(currentValue, curPrototype.types[i], curPrototype.constraints[i]) !== '';
-                                this.setState({
-                                    inputIsInvalid: newInputIsInvalidState,
-                                });
-                            }}
-                        />
-                    </div>,
-                );
+                                    return autocompleteList;
+                                }}
+                                boxRevIndex={description.length - i}
+                                inputIsInvalid={this.state.inputIsInvalid[i]}
+                                inputSelectedId={this.state.inputFieldValues[i]}
+                                setInputInvalid={(val) => {
+                                    let newInputIsInvalid = this.state.inputIsInvalid.slice();
+                                    newInputIsInvalid[i] = val;
+                                    this.setState({
+                                        inputIsInvalid: newInputIsInvalid,
+                                    });
+                                }}
+                                setInputSelectedId={(val) => {
+                                    let newInputFieldValues = this.state.inputFieldValues.slice();
+                                    newInputFieldValues[i] = val;
+                                    let newAutocompleteInfo;
+                                    let fetchedObject;
+                                    switch (curPrototype.rootTypes[i]) {
+                                    case "component_pkid":
+                                        fetchedObject = this.props.fetchInfoByIndex('components', val);
+                                        newAutocompleteInfo = {
+                                            main: fetchedObject.productname,
+                                            sub: fetchedObject.manufacturer,
+                                        };
+                                        break;
+                                    case "mode_pkid":
+                                        fetchedObject = this.props.fetchInfoByIndex('modes', val);
+                                        newAutocompleteInfo = {
+                                            main: fetchedObject.failname,
+                                            sub: fetchedObject.code,
+                                        };
+                                        break;
+                                    default:
+                                        console.log(`Unrecognized root type ${curPrototype.rootTypes}`);
+                                    }
+                                    let newAutocompleteSelectedInfo = this.state.autocompleteSelectedInfo.slice();
+                                    newAutocompleteSelectedInfo[i] = newAutocompleteInfo;
+                                    this.setState({
+                                        inputFieldValues: newInputFieldValues,
+                                        autocompleteSelectedInfo: newAutocompleteSelectedInfo,
+                                    });
+                                }}
+                                selectedInfo={this.state.autocompleteSelectedInfo[i]}
+                            />
+                        </div>,
+                    );
+                } else {
+                    addChildren.push(
+                        <div className="modal-add-row" key={`modal-add-row-${description[i]}`}>
+                            <div className="modal-add-row-label">
+                                {description[i]}
+                            </div>
+                            <input
+                                className={`bordered-input-box${this.state.inputIsInvalid[i] ? ' bordered-input-box-invalid' : ''}`}
+                                type="text"
+                                value={this.state.inputFieldValues[i] === null ? '' : this.state.inputFieldValues[i]}
+                                onChange={(val) => {
+                                    const newState = this.state.inputFieldValues.slice();
+                                    newState[i] = val.target.value;
+                                    this.setState({
+                                        inputFieldValues: newState,
+                                    });
+                                }}
+                                onBlur={(e) => {
+                                    const currentValue = e.target.value;
+                                    const newInputIsInvalidState = this.state.inputIsInvalid.slice();
+                                    newInputIsInvalidState[i] = validateInput(currentValue, curPrototype.types[i], curPrototype.constraints[i]) !== '';
+                                    this.setState({
+                                        inputIsInvalid: newInputIsInvalidState,
+                                    });
+                                }}
+                            />
+                        </div>,
+                    );
+                }
             }
         }
         return (

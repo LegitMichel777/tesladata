@@ -12,12 +12,13 @@ import TopMenu from './TopMenu/TopMenu';
 import httpCall from './services/httpCall';
 import DeleteModal from './Modals/DeleteModal/deleteModal';
 import AddModal from './Modals/AddModal/addModal';
-import { getSingularDisplayName } from './utils';
+import { getDisplayName, getSingularDisplayName } from './utils';
 import serverRequestAdd from './services/serverRequestAdd';
 import * as globals from './globals';
 import cleanseInput from './DataStructs/cleanseInput';
 import dataSearch from './dataSearch';
 import rootTypeToState from './DataStructs/rootTypeToState';
+import getCorrespondingDisplayNameOfColumnId from './DataStructs/getCorrespondingDisplayNameOfColumnId';
 
 class App extends React.Component {
     async fetchStructs() {
@@ -124,23 +125,27 @@ class App extends React.Component {
             deleteModalText: '',
             addModalShown: false,
             dataLength: -1,
+            isInSearch: false,
+            searchColumn: {
+                components: 'productname',
+                failures: 'failedcomponent',
+                modes: 'name',
+            },
+            searchContents: "",
         };
     }
 
     componentDidMount() {
         this.fetchStructs().then(() => {
-            this.setState({
-                displayData: this.recomputeData('failures', 'num', true),
-                dataLength: this.getRawData('failures').length,
-            });
+            this.recomputeData('failures', 'num', true);
         });
     }
 
     changeCurrentSelectedMenuItem(val) {
+        this.recomputeData(val);
         this.setState({
             currentSelectedMenuItem: val,
-            displayData: this.recomputeData(val),
-            dataLength: this.getRawData(val).length,
+            searchContents: "",
         });
     }
 
@@ -158,7 +163,7 @@ class App extends React.Component {
         }
     }
 
-    recomputeData(selectedState = this.state.currentSelectedMenuItem, sortedColumn = this.state.sortedColumn[selectedState], sortMethodAscending = this.state.sortMethodAscending[selectedState]) {
+    recomputeData(selectedState = this.state.currentSelectedMenuItem, sortedColumn = this.state.sortedColumn[selectedState], sortMethodAscending = this.state.sortMethodAscending[selectedState], searchContents = this.state.searchContents, isInSearch = this.state.isInSearch, searchColumn = this.state.searchColumn[this.state.currentSelectedMenuItem]) {
         this.selectionAnchor = -1;
         this.selectionLastAction = '';
         console.log('Recomputing display data');
@@ -176,10 +181,16 @@ class App extends React.Component {
         default:
             console.log(`Unknown selected state (${selectedState})`);
         }
-        const displayData = this.getRawData(selectedState).slice();
+        let displayData = this.getRawData(selectedState).slice();
         for (let i = 0; i < displayData.length; i++) {
             displayData[i].num = i + 1;
             displayData[i].selected = accompanyingSelectionData[i];
+        }
+        if (isInSearch) {
+            displayData=dataSearch(displayData, searchColumn, searchContents);
+            for (let i=0;i<displayData.length;i++) {
+                displayData[i]=displayData[i].data;
+            }
         }
         this.currentSortToDbMapping = Array(displayData.length);
         this.currentDbToSortMapping = Array(displayData.length);
@@ -224,7 +235,11 @@ class App extends React.Component {
                 this.currentDbToSortMapping[this.currentSortToDbMapping[i]] = i;
             }
         }
-        return displayData;
+        this.setState({
+            displayData: displayData,
+            dataLength: displayData.length,
+        });
+        return null;
     }
 
     getRelSelectionArrayAndCache(currentMenuState = this.state.currentSelectedMenuItem) {
@@ -254,9 +269,13 @@ class App extends React.Component {
         const [relSelectionArray, relSelectionCache] = this.getRelSelectionArrayAndCache();
         // clear the cache
         relSelectionCache.length = 0;
-        for (let i = 0; i < relSelectionArray.length; i++) {
-            relSelectionArray[i] = shouldSelectAll;
-            if (shouldSelectAll) relSelectionCache.push(i);
+        for (let i = 0; i < this.state.displayData.length; i++) {
+            relSelectionArray[this.currentSortToDbMapping[i]] = shouldSelectAll;
+        }
+        for (let i=0;i<relSelectionArray.length;i++) {
+            if (relSelectionArray[i]) {
+                relSelectionCache.push(i);
+            }
         }
         const newDisplayData = this.state.displayData.slice();
         for (let i = 0; i < newDisplayData.length; i++) {
@@ -471,10 +490,8 @@ class App extends React.Component {
                     }
                 }
             }
-            this.setState({
-                displayData: this.recomputeData(),
-                dataLength: this.getRawData().length,
-            });
+            this.recomputeData();
+            this.selectionAnchor=-1;
         }
     }
 
@@ -532,6 +549,9 @@ class App extends React.Component {
 
     selectionToggleButtonIsSelectAll() {
         // determines whether or not the selection button is select all
+        if (this.state.dataLength === 0) {
+            return true;
+        }
         return this.getCurrentNumberOfSelections() !== this.state.dataLength;
     }
 
@@ -565,14 +585,12 @@ class App extends React.Component {
         default:
             console.log(`Creating object called on invalid menu item ${currentState}`);
         }
-        this.setState({
-            displayData: this.recomputeData(),
-            dataLength: this.getRawData().length,
-        });
         relSelectionArray.unshift(false);
         for (let i=0;i<relSelectionCache.length;i++) {
             relSelectionCache[i]++;
         }
+        this.selectionAnchor=-1;
+        this.recomputeData();
     }
 
     fetchInfoByIndex(state, index) {
@@ -610,8 +628,8 @@ class App extends React.Component {
                 <AddModal
                     show={this.state.addModalShown}
                     addClicked={(args) => {
-                        const isRootType = getPrototype(this.state.currentSelectedMenuItem).constructor.rootDescribe !== null;
                         const curPrototype = getPrototype(this.state.currentSelectedMenuItem).constructor;
+                        const isRootType = curPrototype.rootDescribe !== undefined;
                         const identifiers = isRootType ? curPrototype.rootTypes : curPrototype.getIds;
                         if (args.length === identifiers.length) {
                             const toAddObj = {};
@@ -700,6 +718,23 @@ class App extends React.Component {
                             }}
                             performDeSelectAll={this.handleDeSelectAllButtonPressed.bind(this)}
                             selectionToggleButtonIsSelectAll={this.selectionToggleButtonIsSelectAll()}
+                            setSearchActive={(val) => {
+                                if (!val && this.state.searchContents !== '') {
+                                    return;
+                                }
+                                this.setState({
+                                    isInSearch: val,
+                                });
+                            }}
+                            searchContents={this.state.searchContents}
+                            setSearchContents={(val) => {
+                                this.setState({
+                                    searchContents: val,
+                                });
+                                this.recomputeData(undefined, undefined, undefined, val, true);
+                                // actually do the search now
+                            }}
+                            searchTip={this.state.isInSearch ? `${getDisplayName(this.state.currentSelectedMenuItem)}: Searching ${getCorrespondingDisplayNameOfColumnId(getPrototype(this.state.currentSelectedMenuItem), this.state.searchColumn[this.state.currentSelectedMenuItem])}` : ''}
                         />
                     </div>
                     <MainTable
@@ -710,21 +745,36 @@ class App extends React.Component {
                         processClick={this.processClick.bind(this)}
                         highlightData={this.state.highlightData}
                         tableDataPrototype={getPrototype(this.state.currentSelectedMenuItem)}
-                        setSortMethod={(method, ascending) => {
-                            this.setState((previousState) => ({
-                                sortedColumn: {
-                                    components: (previousState.currentSelectedMenuItem === 'components' ? method : previousState.sortedColumn.components),
-                                    failures: (previousState.currentSelectedMenuItem === 'failures' ? method : previousState.sortedColumn.failures),
-                                    modes: (previousState.currentSelectedMenuItem === 'modes' ? method : previousState.sortedColumn.modes),
-                                },
-                                sortMethodAscending: {
-                                    components: (previousState.currentSelectedMenuItem === 'components' ? ascending : previousState.sortedColumn.components),
-                                    failures: (previousState.currentSelectedMenuItem === 'failures' ? ascending : previousState.sortedColumn.failures),
-                                    modes: (previousState.currentSelectedMenuItem === 'modes' ? ascending : previousState.sortedColumn.modes),
-                                },
-                                displayData: this.recomputeData(previousState.currentSelectedMenuItem, method, ascending),
-                            }));
+                        handleHeaderClick={(id, cmdOrOptionHeld) => {
+                            if (!this.state.isInSearch || (this.state.isInSearch && cmdOrOptionHeld)) {
+                                let newSortedColumn = { ...this.state.sortedColumn };
+                                let newSortMethodAscending = { ...this.state.sortMethodAscending };
+
+                                if (id === newSortedColumn[this.state.currentSelectedMenuItem]) {
+                                    newSortMethodAscending[this.state.currentSelectedMenuItem] = !newSortMethodAscending[this.state.currentSelectedMenuItem];
+                                } else {
+                                    newSortedColumn[this.state.currentSelectedMenuItem] = id;
+                                    newSortMethodAscending[this.state.currentSelectedMenuItem] = true;
+                                }
+                                this.recomputeData(this.state.currentSelectedMenuItem, newSortedColumn[this.state.currentSelectedMenuItem], newSortMethodAscending[this.state.currentSelectedMenuItem]);
+                                this.setState(() => ({
+                                    sortedColumn: newSortedColumn,
+                                    sortMethodAscending: newSortMethodAscending,
+                                }));
+                            } else {
+                                if (id === 'num') {
+                                    return;
+                                }
+                                let newSearchColumn = { ...this.state.searchColumn };
+                                newSearchColumn[this.state.currentSelectedMenuItem] = id;
+                                this.setState({
+                                    searchColumn: newSearchColumn,
+                                });
+                                this.recomputeData(undefined, undefined, undefined, undefined, undefined, id);
+                            }
                         }}
+                        isInSearch={this.state.isInSearch}
+                        searchColumn={this.state.searchColumn[this.state.currentSelectedMenuItem]}
                     />
                 </div>
             </div>

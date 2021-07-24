@@ -5,23 +5,19 @@ import { getIcon } from '../utils';
 import './TableColors.css';
 
 function TableHeaderItem(props) {
-    const iAmSort = props.myId === props.curSortId;
     return (
         // parameters: what to display, my id, the currently being sorted id, which way its being sorted
         <th
-            onClick={() => {
-                if (iAmSort) {
-                    props.setSortMethod(props.myId, !props.curSortMode);
-                } else {
-                    props.setSortMethod(props.myId, true);
-                }
+            onMouseDown={(e) => {
+                e.preventDefault();
+                props.handleHeaderClick(e.metaKey || e.altKey);
             }}
             className="TableHeaderTh"
         >
-            <div className={`tableHeaderItem${iAmSort ? 'Highlighted' : 'Unhighlighted'}`}>
-                <div>{ props.displayItem }</div>
-                <div className={`tableHeaderSort${iAmSort ? '' : ' tableHeaderHidden'}`}>
-                    <img src={getIcon(props.curSortMode ? 'DownArrow' : 'UpArrow')} alt="Sorting Icon" />
+            <div className={`tableHeaderItem${props.highlight ? 'Highlighted' : 'Unhighlighted'}`}>
+                <div className={props.greyOut ? 'tableHeaderItem-greyOut' : ''}>{ props.displayItem }</div>
+                <div className={`tableHeaderSort${props.sortArrow!=='' ? '' : ' tableHeaderHidden'}`}>
+                    <img src={getIcon(props.sortArrow)} className="tableHeaderSort-icon" alt="Sorting Icon" />
                 </div>
             </div>
         </th>
@@ -29,11 +25,11 @@ function TableHeaderItem(props) {
 }
 
 TableHeaderItem.propTypes = {
-    myId: PropTypes.string.isRequired,
-    curSortId: PropTypes.string.isRequired,
-    setSortMethod: PropTypes.func.isRequired,
     displayItem: PropTypes.string.isRequired,
-    curSortMode: PropTypes.bool.isRequired,
+    highlight: PropTypes.bool.isRequired,
+    greyOut: PropTypes.bool.isRequired,
+    sortArrow: PropTypes.string.isRequired,
+    handleHeaderClick: PropTypes.func.isRequired,
 };
 
 function TableHeader(props) {
@@ -44,18 +40,26 @@ function TableHeader(props) {
     const children = Array(headerData.length + 3);
     for (let i = 0; i < headerData.length; i++) {
         children[i] = React.createElement(TableHeaderItem, {
-            displayItem: headerData[i], myId: headerDataIds[i], curSortId: props.sortedColumn, curSortMode: props.sortMethodAscending, key: `HeaderItem${headerDataIds[i]}`, setSortMethod: props.setSortMethod,
+            displayItem: headerData[i],
+            highlight: headerDataIds[i] === props.sortedColumn,
+            greyOut: props.isInSearch && props.searchColumn !== headerDataIds[i],
+            sortArrow: headerDataIds[i] === props.sortedColumn ? (props.sortMethodAscending ? 'DownArrow' : 'UpArrow') : '',
+            handleHeaderClick: (cmdOrOptionHeld) => {
+                props.handleHeaderClick(headerDataIds[i], cmdOrOptionHeld);
+            },
+            key: `HeaderItem${headerDataIds[i]}`,
         }, null);
     }
     return React.createElement('tr', { id: 'TableHeader' }, children);
 }
 
 TableHeader.propTypes = {
-    // eslint-disable-next-line react/forbid-prop-types
     headerData: PropTypes.object.isRequired,
     sortedColumn: PropTypes.string.isRequired,
     sortMethodAscending: PropTypes.bool.isRequired,
-    setSortMethod: PropTypes.func.isRequired,
+    handleHeaderClick: PropTypes.func.isRequired,
+    isInSearch: PropTypes.bool.isRequired,
+    searchColumn: PropTypes.string.isRequired,
 };
 
 function TableRow(props) {
@@ -132,7 +136,7 @@ export default function MainTable(props) {
         tableElements = [
             <tr key="NoDataTableTr">
                 <td id="NoData" colSpan={dataPrototype.getData().length + 1}>
-                    No Data
+                    {props.isInSearch ? "No Results" : "No Data"}
                 </td>
             </tr>,
         ];
@@ -142,7 +146,7 @@ export default function MainTable(props) {
             <div id="TableShadow" />
             <table id="MainTable">
                 <thead>
-                    <TableHeader headerData={dataPrototype} sortedColumn={props.sortedColumn} sortMethodAscending={props.sortMethodAscending} setSortMethod={props.setSortMethod} />
+                    <TableHeader headerData={dataPrototype} sortedColumn={props.sortedColumn} sortMethodAscending={props.sortMethodAscending} handleHeaderClick={props.handleHeaderClick} isInSearch={props.isInSearch} searchColumn={props.searchColumn} />
                 </thead>
                 <tbody>
                     {tableElements}
@@ -154,11 +158,12 @@ export default function MainTable(props) {
 
 MainTable.propTypes = {
     displayData: PropTypes.arrayOf(PropTypes.object).isRequired,
-    // eslint-disable-next-line react/forbid-prop-types
     tableDataPrototype: PropTypes.object.isRequired,
     tableType: PropTypes.string.isRequired,
     processClick: PropTypes.func.isRequired,
     sortedColumn: PropTypes.string.isRequired,
     sortMethodAscending: PropTypes.bool.isRequired,
-    setSortMethod: PropTypes.func.isRequired,
+    handleHeaderClick: PropTypes.func.isRequired,
+    isInSearch: PropTypes.bool.isRequired,
+    searchColumn: PropTypes.string.isRequired,
 };

@@ -108,8 +108,10 @@ export function getIcon(name) {
             return XmarkDark;
         }
         return Xmark;
+    case '':
+        return undefined;
     default:
-        console.log('Requested icon not found.');
+        console.log(`Requested icon ${name} not found.`);
     }
     return undefined;
 }

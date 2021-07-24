@@ -10,6 +10,7 @@ export default function dataSearch(rawData, column, key) {
         }
     }
     if (searchIndex === -1) {
+        console.log(`Search error: Couldn't find search column ${column}`);
         return [];
     }
     let searchResult=[];

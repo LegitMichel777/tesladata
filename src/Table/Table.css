@@ -124,3 +124,9 @@ th {
     text-align: center;
     height: 176px;
 }
+.tableHeaderSort-icon {
+    width: 100%;
+}
+.tableHeaderItem-greyOut {
+    color: #888888;
+}

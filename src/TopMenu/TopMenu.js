@@ -8,13 +8,31 @@ function SearchField(props) {
     return (
         <div id="mainSearchField">
             <img id="searchIcon" src={getIcon('search')} alt="Search Icon" />
-            <input type="text" className="beautiful-textfield" placeholder={`Search ${getDisplayName(props.currentSelectedMenuItem)}`} />
+            <input
+                type="text"
+                className="beautiful-textfield"
+                placeholder={`Search ${getDisplayName(props.currentSelectedMenuItem)}`}
+                onBlur={() => {
+                    props.setSearchActive(false);
+                }}
+                onFocus={(e) => {
+                    props.setSearchActive(true);
+                    props.setSearchContents(e.target.value);
+                }}
+                onChange={(e) => {
+                    props.setSearchContents(e.target.value);
+                }}
+                value={props.searchContents}
+            />
         </div>
     );
 }
 
 SearchField.propTypes = {
     currentSelectedMenuItem: PropTypes.string.isRequired,
+    setSearchActive: PropTypes.func.isRequired,
+    searchContents: PropTypes.string.isRequired,
+    setSearchContents: PropTypes.func.isRequired,
 };
 
 function TopMenuButton(props) {
@@ -115,11 +133,11 @@ export default class TopMenu extends React.Component {
                         />
                     </div>
                     <div className="topSegEqual">
-                        <SearchField currentSelectedMenuItem={this.props.currentSelectedMenuItem} />
+                        <SearchField currentSelectedMenuItem={this.props.currentSelectedMenuItem} setSearchActive={this.props.setSearchActive} searchContents={this.props.searchContents} setSearchContents={this.props.setSearchContents} />
                     </div>
                 </div>
                 <div id="topMenuSelectedDisplay">
-                    { getDisplayName(this.props.currentSelectedMenuItem) }
+                    { this.props.searchTip !== '' ? this.props.searchTip : getDisplayName(this.props.currentSelectedMenuItem) }
                 </div>
             </div>
         );
@@ -135,4 +153,8 @@ TopMenu.propTypes = {
     performDeSelectAll: PropTypes.func.isRequired,
     currentSelectedMenuItem: PropTypes.string.isRequired,
     selectionToggleButtonIsSelectAll: PropTypes.bool.isRequired,
+    setSearchActive: PropTypes.func.isRequired,
+    searchContents: PropTypes.string.isRequired,
+    setSearchContents: PropTypes.func.isRequired,
+    searchTip: PropTypes.string.isRequired,
 };
