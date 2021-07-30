@@ -16,10 +16,7 @@ export default function dataSearch(rawData, column, key) {
     let searchResult=[];
     for (let i=0;i<rawData.length;i++) {
         const tryMatch = String(rawData[i].getData()[searchIndex]);
-        if (key.length > tryMatch.length) {
-            continue;
-        }
-        if (tryMatch.substring(0, key.length) === key) {
+        if (tryMatch.indexOf(key) !== -1) {
             searchResult.push({
                 index: i,
                 data: rawData[i],

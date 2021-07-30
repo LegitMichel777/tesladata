@@ -8,7 +8,7 @@ export default class ComponentsData {
     }
 
     static get describe() {
-        return ['Product Name', 'Manufacturer', 'Contact', 'Fail Rate'];
+        return ['Component Name', 'Manufacturer', 'Contact', 'Fail Rate'];
     }
 
     static get getIds() {

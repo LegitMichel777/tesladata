@@ -14,6 +14,7 @@ import DeleteModal from './Modals/DeleteModal/deleteModal';
 import AddEditModal from './Modals/AddEditModal/addEditModal';
 import { getDisplayName, getSingularDisplayName } from './utils';
 import serverRequestAdd from './services/serverRequestAdd';
+import serverRequestUpdate from './services/serverRequestUpdate';
 import * as globals from './globals';
 import cleanseInput from './DataStructs/cleanseInput';
 import dataSearch from './dataSearch';
@@ -560,32 +561,64 @@ class App extends React.Component {
         return this.getCurrentNumberOfSelections() !== this.state.dataLength;
     }
 
-    createAndAddObject(newDbid, toAddObj, currentState) {
-        const [relSelectionArray, relSelectionCache] = this.getRelSelectionArrayAndCache(currentState);
+    generateNewObject(currentState = this.state.currentSelectedMenuItem, args) {
+        const curPrototype = getPrototype(currentState).constructor;
+        const isRootType = curPrototype.rootDescribe !== undefined;
+        const identifiers = isRootType ? curPrototype.rootTypes : curPrototype.getIds;
+        const serverObj = {};
+        if (args.length === identifiers.length) {
+            for (let i = 0; i < identifiers.length; i++) {
+                serverObj[identifiers[i]] = isRootType ? this.fetchInfoByIndex(rootTypeToState(curPrototype.rootTypes[i]), args[i]).dbid : cleanseInput(args[i]);
+            }
+        } else {
+            console.log(`Generate new object: argument length mismatch`);
+            return {};
+        }
+
+        let dataStructObj;
         let linkedComponentIndex=-1;
         let linkedModeIndex=-1;
         switch (currentState) {
         case 'components':
-            this.rawComponentsData.unshift(new ComponentsData(newDbid, toAddObj.productname, toAddObj.manufacturer, toAddObj.contact, toAddObj.failrate));
+            dataStructObj=new ComponentsData(-1, serverObj.productname, serverObj.manufacturer, serverObj.contact, serverObj.failrate);
             break;
         case 'failures':
             for (let i=0;i<this.rawComponentsData.length;i++) {
-                if (this.rawComponentsData[i].dbid===toAddObj.component_pkid) {
+                if (this.rawComponentsData[i].dbid===serverObj.component_pkid) {
                     linkedComponentIndex=i;
                 }
             }
             for (let i=0;i<this.rawModesData.length;i++) {
-                if (this.rawModesData[i].dbid===toAddObj.mode_pkid) {
+                if (this.rawModesData[i].dbid===serverObj.mode_pkid) {
                     linkedModeIndex=i;
                 }
             }
             if (linkedComponentIndex===-1||linkedModeIndex===-1) {
-                return;
+                console.log(`Generate new object: linked component or linked mode not found.`);
+                return {};
             }
-            this.rawFailsData.unshift(new FailsData(newDbid, toAddObj.component_pkid, this.rawComponentsData[linkedComponentIndex].productname, toAddObj.mode_pkid, this.rawModesData[linkedModeIndex].failname, this.rawModesData[linkedModeIndex].code, this.rawModesData[linkedModeIndex].description));
+            dataStructObj=new FailsData(-1, serverObj.component_pkid, this.rawComponentsData[linkedComponentIndex].productname, serverObj.mode_pkid, this.rawModesData[linkedModeIndex].failname, this.rawModesData[linkedModeIndex].code, this.rawModesData[linkedModeIndex].description);
             break;
         case 'modes':
-            this.rawModesData.unshift(new ModesData(newDbid, toAddObj.name, toAddObj.code, toAddObj.description));
+            dataStructObj=new ModesData(-1, serverObj.name, serverObj.code, serverObj.description);
+            break;
+        default:
+            console.log(`Creating object called on invalid menu item ${currentState}`);
+        }
+        return { serverObj, dataStructObj };
+    }
+
+    createAndAddObject(dataStructObj, currentState) {
+        const [relSelectionArray, relSelectionCache] = this.getRelSelectionArrayAndCache(currentState);
+        switch (currentState) {
+        case 'components':
+            this.rawComponentsData.unshift(dataStructObj);
+            break;
+        case 'failures':
+            this.rawFailsData.unshift(dataStructObj);
+            break;
+        case 'modes':
+            this.rawModesData.unshift(dataStructObj);
             break;
         default:
             console.log(`Creating object called on invalid menu item ${currentState}`);
@@ -595,6 +628,35 @@ class App extends React.Component {
             relSelectionCache[i]++;
         }
         this.selectionAnchor=-1;
+        this.recomputeData();
+    }
+
+    updateObject(dataStructObj, index, currentState) {
+        switch (currentState) {
+        case 'components':
+            this.rawComponentsData[index]=dataStructObj;
+            for (let i=0;i<this.rawFailsData.length;i++) {
+                if (this.rawFailsData[i].failComponentId === this.rawComponentsData[index].dbid) {
+                    this.rawFailsData[i].failComponentName = this.rawComponentsData[index].productname;
+                }
+            }
+            break;
+        case 'failures':
+            this.rawFailsData[index]=dataStructObj;
+            break;
+        case 'modes':
+            this.rawModesData[index]=dataStructObj;
+            for (let i=0;i<this.rawFailsData.length;i++) {
+                if (this.rawFailsData[i].failModeId === this.rawModesData[index].dbid) {
+                    this.rawFailsData[i].failModeName = this.rawModesData[index].failname;
+                    this.rawFailsData[i].failCode = this.rawModesData[index].code;
+                    this.rawFailsData[i].failDescription = this.rawModesData[index].description;
+                }
+            }
+            break;
+        default:
+            console.log(`Updating object called on invalid menu item ${currentState}`);
+        }
         this.recomputeData();
     }
 
@@ -634,18 +696,15 @@ class App extends React.Component {
                     modalType="add"
                     show={this.state.addModalShown}
                     submitClicked={(args) => {
-                        const curPrototype = getPrototype(this.state.currentSelectedMenuItem).constructor;
-                        const isRootType = curPrototype.rootDescribe !== undefined;
-                        const identifiers = isRootType ? curPrototype.rootTypes : curPrototype.getIds;
-                        if (args.length === identifiers.length) {
-                            const toAddObj = {};
-                            for (let i = 0; i < identifiers.length; i++) {
-                                toAddObj[identifiers[i]] = isRootType ? this.fetchInfoByIndex(rootTypeToState(curPrototype.rootTypes[i]), args[i]).dbid : cleanseInput(args[i]);
-                            }
-                            serverRequestAdd(toAddObj, this.state.currentSelectedMenuItem).then((res) => {
-                                this.createAndAddObject(res.data[0], toAddObj, this.state.currentSelectedMenuItem);
-                            });
+                        let { serverObj, dataStructObj } = this.generateNewObject(this.state.currentSelectedMenuItem, args);
+                        if (serverObj === undefined || dataStructObj === undefined) {
+                            return;
                         }
+                        serverRequestAdd(serverObj, this.state.currentSelectedMenuItem).then((res) => {
+                            // eslint-disable-next-line prefer-destructuring
+                            dataStructObj.dbid=res.data[0];
+                            this.createAndAddObject(dataStructObj, this.state.currentSelectedMenuItem);
+                        });
                         this.setState({
                             addModalShown: false,
                         });
@@ -665,21 +724,30 @@ class App extends React.Component {
                     modalType="edit"
                     show={this.state.editModalShown}
                     submitClicked={(args) => {
-                        console.log(args);
-                        /*
-                        const curPrototype = getPrototype(this.state.currentSelectedMenuItem).constructor;
-                        const isRootType = curPrototype.rootDescribe !== undefined;
-                        const identifiers = isRootType ? curPrototype.rootTypes : curPrototype.getIds;
-                        if (args.length === identifiers.length) {
-                            const toAddObj = {};
-                            for (let i = 0; i < identifiers.length; i++) {
-                                toAddObj[identifiers[i]] = isRootType ? this.fetchInfoByIndex(rootTypeToState(curPrototype.rootTypes[i]), args[i]).dbid : cleanseInput(args[i]);
-                            }
-                            serverRequestAdd(toAddObj, this.state.currentSelectedMenuItem).then((res) => {
-                                this.createAndAddObject(res.data[0], toAddObj, this.state.currentSelectedMenuItem);
-                            });
+                        let { serverObj, dataStructObj }= this.generateNewObject(this.state.currentSelectedMenuItem, args);
+                        if (serverObj === undefined || dataStructObj === undefined) {
+                            return;
                         }
-                         */
+                        let { index } = this.state.additionalEditInfo;
+                        switch (this.state.currentSelectedMenuItem) {
+                        case "components":
+                            serverObj.pkid=this.rawComponentsData[index].dbid;
+                            dataStructObj.dbid=this.rawComponentsData[index].dbid;
+                            break;
+                        case "failures":
+                            serverObj.pkid=this.rawFailsData[index].dbid;
+                            dataStructObj.dbid=this.rawFailsData[index].dbid;
+                            break;
+                        case "modes":
+                            serverObj.pkid=this.rawModesData[index].dbid;
+                            dataStructObj.dbid=this.rawModesData[index].dbid;
+                            break;
+                        default:
+                            console.log(`Tried to assign pkid with invalid state ${this.state.currentSelectedMenuItem}`);
+                        }
+                        serverRequestUpdate(serverObj, this.state.currentSelectedMenuItem).then(() => {
+                            this.updateObject(dataStructObj, index, this.state.currentSelectedMenuItem);
+                        });
                         this.setState({
                             editModalShown: false,
                         });

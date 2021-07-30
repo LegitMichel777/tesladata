@@ -10,7 +10,7 @@ export default class FailsData {
     }
 
     static get describe() {
-        return ['Failed Component', 'Fail Name', 'Fail Code', 'Description'];
+        return ['Component', 'Fail Mode', 'Fail Code', 'Description'];
     }
 
     static get rootTypes() {

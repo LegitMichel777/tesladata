@@ -14,7 +14,7 @@ export default async function serverRequestAdd(toAdd, object) {
         objectUrlPiece = 'fail_mode';
         break;
     default:
-        console.log(`Server add request called on unrecognized state ${object}`);
+        console.log(`Server update request called on unrecognized state ${object}`);
     }
-    return axios.post(`${globals.rootURL}/${objectUrlPiece}/add`, toAdd);
+    return axios.post(`${globals.rootURL}/${objectUrlPiece}/update`, toAdd);
 }
