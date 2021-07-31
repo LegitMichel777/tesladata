@@ -23,78 +23,94 @@ import getCorrespondingDisplayNameOfColumnId from './DataStructs/getCorrespondin
 import autocompleteSearch from './autocompleteSearch';
 
 class App extends React.Component {
-    async fetchStructs() {
-        const fetchRequests = [httpCall(`${globals.rootURL}/components/fetchAll`),
-            httpCall(`${globals.rootURL}/fail_mode/fetchAll`),
-            httpCall(`${globals.rootURL}/mapping/fetchAll`),
-        ];
-        await Promise.all(fetchRequests).then((reqsReturn) => {
-            const gotComponentsData = reqsReturn[0][0];
-            const gotModesData = reqsReturn[1][0];
-            const gotFailsData = reqsReturn[2][0];
-            this.rawComponentsData = Array(gotComponentsData.length);
-            for (let i = 0; i < gotComponentsData.length; i++) {
-                const current = gotComponentsData[i];
-                this.rawComponentsData[i] = new ComponentsData(current.pkid,
+    async fetchComponents() {
+        const callUrl=`${globals.rootURL}/components/fetchAll`;
+        const rawData=this.rawComponentsData;
+        const relevantSelections=this.componentSelections;
+        const relevantSelectionCache=this.componentsSelectedCache;
+        await httpCall(callUrl).then((reqsReturn) => {
+            relevantSelectionCache.length=0;
+            const gottenData = reqsReturn[0];
+            let newRawData = Array(gottenData.length);
+            for (let i = 0; i < gottenData.length; i++) {
+                const current = gottenData[i];
+                newRawData[i] = new ComponentsData(current.pkid,
                     current.productname,
                     current.manufacturer,
                     current.contact,
                     current.failrate);
             }
-            this.rawModesData = Array(gotModesData.length);
-            for (let i = 0; i < gotModesData.length; i++) {
-                const current = gotModesData[i];
-                this.rawModesData[i] = new ModesData(current.pkid,
+
+            this.componentSelections=this.realignSelections(rawData, gottenData, relevantSelectionCache, relevantSelections, newRawData);
+            this.rawComponentsData=newRawData;
+        });
+    }
+
+    async fetchModes() {
+        const callUrl=`${globals.rootURL}/fail_mode/fetchAll`;
+        const rawData=this.rawModesData;
+        const relevantSelections=this.modesSelections;
+        const relevantSelectionCache=this.modesSelectedCache;
+        await httpCall(callUrl).then((reqsReturn) => {
+            relevantSelectionCache.length=0;
+            const gottenData = reqsReturn[0];
+            let newRawData = Array(gottenData.length);
+            for (let i = 0; i < gottenData.length; i++) {
+                const current = gottenData[i];
+                newRawData[i] = new ModesData(current.pkid,
                     current.failname,
                     current.code,
                     current.description);
             }
 
-            const componentsIdToIndexMap = new Map();
-            const modesIdToIndexMap = new Map();
-            for (let i = 0; i < this.rawComponentsData.length; i++) {
-                componentsIdToIndexMap.set(this.rawComponentsData[i].dbid, i);
-            }
-            for (let i = 0; i < this.rawModesData.length; i++) {
-                modesIdToIndexMap.set(this.rawModesData[i].dbid, i);
-            }
-            this.rawFailsData = Array(gotFailsData.length);
-            for (let i = 0; i < gotFailsData.length; i++) {
-                const current = gotFailsData[i];
-                const componentId = current.component_pkid;
-                const failmodeId = current.failmode_pkid;
-                const componentIndex = componentsIdToIndexMap.get(componentId);
-                const failmodeIndex = modesIdToIndexMap.get(failmodeId);
-                if (componentIndex === undefined || failmodeIndex === undefined) {
-                    console.log('Unable to find corresponding');
-                    if (componentIndex === undefined && failmodeIndex === undefined) {
-                        console.log('Component and Mode');
-                    } else {
-                        console.log(componentIndex === undefined ? 'Component' : 'Mode');
-                    }
-                    console.log(`. Fail #${i} in array, object with pkid ${current.pkid}, component id ${current.component_pkid}, mode id ${current.failmode_pkid}.`);
-                } else {
-                    this.rawFailsData[i] = new FailsData(current.pkid,
-                        componentId, this.rawComponentsData[componentIndex].productname,
-                        failmodeId, this.rawModesData[failmodeIndex].failname,
-                        this.rawModesData[failmodeIndex].code,
-                        this.rawModesData[failmodeIndex].description);
+            this.modesSelections=this.realignSelections(rawData, gottenData, relevantSelectionCache, relevantSelections, newRawData);
+            this.rawModesData=newRawData;
+        });
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    realignSelections(rawData, gottenData, relevantSelectionCache, relevantSelections, newRawData) {
+        let pkidToOldIndexMap = new Map();
+        for (let i=0;i<rawData.length;i++) {
+            pkidToOldIndexMap.set(rawData[i].dbid, i);
+        }
+        let newSelectionData=Array(gottenData.length);
+        for (let i=0;i<newRawData.length;i++) {
+            let oldIndex=pkidToOldIndexMap.get(newRawData[i].dbid);
+            if (oldIndex===undefined) {
+                newSelectionData[i]=false;
+            } else {
+                newSelectionData[i]=relevantSelections[oldIndex];
+                if (newSelectionData[i]) {
+                    relevantSelectionCache.push(i);
                 }
             }
+        }
+        return newSelectionData;
+    }
 
-            // initialize the three selections array
-            this.componentSelections = Array(this.rawComponentsData.length);
-            this.modesSelections = Array(this.rawModesData.length);
-            this.failuresSelections = Array(this.rawFailsData.length);
-            for (let i = 0; i < this.rawComponentsData.length; i++) {
-                this.componentSelections[i] = false;
+    async fetchFailures() {
+        const callUrl=`${globals.rootURL}/mapping/fetchAll`;
+        const rawData=this.rawFailsData;
+        const relevantSelections=this.failuresSelections;
+        const relevantSelectionCache=this.failuresSelectedCache;
+        await httpCall(callUrl).then((reqsReturn) => {
+            relevantSelectionCache.length=0;
+            const gottenData = reqsReturn[0];
+            let newRawData = Array(gottenData.length);
+            for (let i = 0; i < gottenData.length; i++) {
+                const current = gottenData[i];
+                newRawData[i] = new FailsData(current.pkid,
+                    current.failComponentId,
+                    current.failComponentName,
+                    current.failModeId,
+                    current.failModeName,
+                    current.failCode,
+                    current.failDescription);
             }
-            for (let i = 0; i < this.rawModesData.length; i++) {
-                this.modesSelections[i] = false;
-            }
-            for (let i = 0; i < this.rawFailsData.length; i++) {
-                this.failuresSelections[i] = false;
-            }
+
+            this.failuresSelections=this.realignSelections(rawData, gottenData, relevantSelectionCache, relevantSelections, newRawData);
+            this.rawFailsData=newRawData;
         });
     }
 
@@ -140,7 +156,7 @@ class App extends React.Component {
     }
 
     componentDidMount() {
-        this.fetchStructs().then(() => {
+        this.fetchFailures().then(() => {
             this.recomputeData('failures', 'num', true);
         });
     }
@@ -151,6 +167,28 @@ class App extends React.Component {
             currentSelectedMenuItem: val,
             searchContents: "",
         });
+        switch (val) {
+        case "components":
+            this.fetchComponents()
+                .then(() => {
+                    this.recomputeData('components', this.state.sortedColumn.components, this.state.sortMethodAscending.components, "", false, this.state.searchColumn.components);
+                });
+            break;
+        case "failures":
+            this.fetchFailures()
+                .then(() => {
+                    this.recomputeData('failures', this.state.sortedColumn.failures, this.state.sortMethodAscending.failures, "", false, this.state.searchColumn.failures);
+                });
+            break;
+        case "modes":
+            this.fetchModes()
+                .then(() => {
+                    this.recomputeData('modes', this.state.sortedColumn.modes, this.state.sortMethodAscending.modes, "", false, this.state.searchColumn.modes);
+                });
+            break;
+        default:
+            console.log(`Invalid menu item change ${val}`);
+        }
     }
 
     getRawData(selectedState = this.state.currentSelectedMenuItem) {
@@ -805,6 +843,7 @@ class App extends React.Component {
                                 if (isRootType) {
                                     let types=rawData[editIndex].constructor.rootTypes;
                                     let rawRootData=rawData[editIndex].getRootData();
+
                                     for (let i=0;i<types.length;i++) {
                                         if (types[i]==='component_pkid' || types[i]==='mode_pkid') {
                                             let match = -1;

@@ -1,5 +1,5 @@
 export default function dataSearch(rawData, column, key) {
-    if (rawData === []) {
+    if (rawData.length===0) {
         return [];
     }
     let curPrototypeIds = rawData[0].constructor.getIds;

@@ -1,0 +1,13 @@
+:root {
+    --autocomplete-overlay-background: #e8e8e8;
+    --autocomplete-element-text-sub: #777777;
+    --autocomplete-element-hover: #d6d6d6;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --autocomplete-overlay-background: #252525;
+        --autocomplete-element-text-sub: #8f8f8f;
+        --autocomplete-element-hover: #3a3a3a;
+    }
+}

@@ -1,8 +1,8 @@
 :root {
     --addedit-modal-add-bg: #bcf9d2;
     --addedit-modal-add: #04a21c;
-    --addedit-modal-edit-bg: #B8D8FF;
-    --addedit-modal-edit: #0966FF;
+    --addedit-modal-edit-bg: #b8d8ff;
+    --addedit-modal-edit: #0966ff;
     --addedit-modal-input-invalid-outline: #e42727;
 }
 
@@ -10,6 +10,8 @@
     :root {
         --addedit-modal-add-bg: #013814;
         --addedit-modal-add: #00e924;
+        --addedit-modal-edit-bg: #011544;
+        --addedit-modal-edit: #396bff;
         --addedit-modal-input-invalid-outline: #dc0d0d;
     }
 }
