@@ -446,7 +446,7 @@ class App extends React.Component {
         });
     }
 
-    getSelectedDetails() {
+    async getSelectedDetails() {
     // gets details about the current selection for deletion.
     // selectionCache: a list of indexes are selected in the current selected page
     // rawData: just the raw list of data of the current selected page
@@ -475,6 +475,7 @@ class App extends React.Component {
             console.log(`Delete selection called on invalid menu item ${this.state.currentSelectedMenuItem}`);
         }
         if (currentState !== 'failures') {
+            await this.fetchFailures();
             const dbidGettingDeletedMap = {};
             for (let i = 0; i < selectionCache.length; i++) {
                 dbidGettingDeletedMap[rawData[selectionCache[i]].dbid] = true;
@@ -495,7 +496,7 @@ class App extends React.Component {
     async deleteSelection() {
     // delete the current selection, taking into consideration that dependencies (such as failures) also have to be deleted.
         const deleteSelection = [];
-        const selectionDetails = this.getSelectedDetails();
+        const selectionDetails = await this.getSelectedDetails();
         const selectionCache = selectionDetails[0]; const rawData = selectionDetails[1]; const selectionRawData = selectionDetails[2]; const
             relatedFailureDeletions = selectionDetails[3];
         if (selectionCache.length > 0) {
@@ -539,12 +540,12 @@ class App extends React.Component {
         }
     }
 
-    confirmAndDelete() {
+    async confirmAndDelete() {
     // generate a confirmation message and show the modal
         let nextConfirmMessage;
-        const selectionDetails = this.getSelectedDetails();
-        const selectionCache = selectionDetails[0]; const
-            willDelete = selectionDetails[3].length;
+        const selectionDetails = await this.getSelectedDetails();
+        const selectionCache = selectionDetails[0];
+        const willDelete = selectionDetails[3].length;
         if (selectionCache.length === 0) {
             return;
         }
@@ -712,6 +713,29 @@ class App extends React.Component {
         return null;
     }
 
+    async fetchRootDataByDbid(type, dbid, performFetch) {
+        let match = -1;
+        let rawMatchData=(type==='component_pkid' ? this.rawComponentsData : this.rawModesData);
+        for (let j=0;j<rawMatchData.length;j++) {
+            if (rawMatchData[j].dbid === dbid) {
+                match=j;
+                break;
+            }
+        }
+        let didGoFetch = false;
+        if (match === -1 && performFetch) {
+            didGoFetch=true;
+            if (type==='component_pkid') {
+                await this.fetchComponents();
+                [match] = await this.fetchRootDataByDbid(type, dbid, false);
+            } else {
+                await this.fetchModes();
+                [match] = await this.fetchRootDataByDbid(type, dbid, false);
+            }
+        }
+        return [match, didGoFetch];
+    }
+
     render() {
         return (
             <div id="masterContainer" className={window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark-theme' : ''}>
@@ -809,13 +833,28 @@ class App extends React.Component {
                             deleteEnabled={this.checkDeleteEnabled()}
                             editEnabled={this.checkEditEnabled()}
                             performDelete={this.confirmAndDelete.bind(this)}
-                            performAdd={() => {
+                            performAdd={async () => {
                                 this.setState({
                                     addModalShown: true,
                                 });
+                                let isRootType = getPrototype(this.state.currentSelectedMenuItem).constructor.rootDescribe !== undefined;
+                                if (isRootType) {
+                                    let types=getPrototype(this.state.currentSelectedMenuItem).constructor.rootTypes;
+                                    for (let i=0;i<types.length;i++) {
+                                        if (types[i]==='component_pkid' || types[i]==='mode_pkid') {
+                                            if (types[i]==='component_pkid') {
+                                                this.fetchComponents();
+                                            } else {
+                                                this.fetchModes();
+                                            }
+                                        } else {
+                                            console.log(`Unrecognized root type ${types[i]}`);
+                                        }
+                                    }
+                                }
                             }}
-                            performEdit={() => {
-                                let [selectionCache, rawData, , relatedFailureDeletions] = this.getSelectedDetails();
+                            performEdit={async () => {
+                                let [selectionCache, rawData, , relatedFailureDeletions] = await this.getSelectedDetails();
                                 if (selectionCache.length !== 1) {
                                     return;
                                 }
@@ -844,24 +883,30 @@ class App extends React.Component {
                                     let types=rawData[editIndex].constructor.rootTypes;
                                     let rawRootData=rawData[editIndex].getRootData();
 
+                                    let fetchJobs=[];
                                     for (let i=0;i<types.length;i++) {
                                         if (types[i]==='component_pkid' || types[i]==='mode_pkid') {
-                                            let match = -1;
-                                            let rawMatchData=(types[i]==='component_pkid' ? this.rawComponentsData : this.rawModesData);
-                                            for (let j=0;j<rawMatchData.length;j++) {
-                                                if (rawMatchData[j].dbid === rawRootData[i]) {
-                                                    match=j;
-                                                    break;
-                                                }
-                                            }
-                                            if (match === -1) {
-                                                console.log(`Failed to load edit view, couldn't find ${types[i]==='component_pkid' ? 'Component' : 'Mode'} with database ID ${rawRootData[i]}`);
-                                                return;
-                                            }
-                                            rootData.push(match);
+                                            fetchJobs.push(this.fetchRootDataByDbid(types[i], rawRootData[i], true));
                                         } else {
                                             console.log(`Unrecognized root type ${types[i]}`);
                                         }
+                                    }
+                                    let results = await Promise.all(fetchJobs);
+                                    for (let i=0;i<types.length;i++) {
+                                        // eslint-disable-next-line no-await-in-loop
+                                        let [match, fetched] = results[i];
+                                        if (!fetched) {
+                                            if (types[i] === 'component_pkid') {
+                                                this.fetchComponents();
+                                            } else {
+                                                this.fetchModes();
+                                            }
+                                        }
+                                        if (match === -1) {
+                                            console.log(`Failed to load edit view, couldn't find ${types[i]==='component_pkid' ? 'Component' : 'Mode'} with database ID ${rawRootData[i]}`);
+                                            return;
+                                        }
+                                        rootData.push(match);
                                     }
                                 }
                                 this.setState({
