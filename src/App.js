@@ -21,6 +21,7 @@ import dataSearch from './dataSearch';
 import rootTypeToState from './DataStructs/rootTypeToState';
 import getCorrespondingDisplayNameOfColumnId from './DataStructs/getCorrespondingDisplayNameOfColumnId';
 import autocompleteSearch from './autocompleteSearch';
+import Pager from './Pager/pager';
 
 class App extends React.Component {
     async fetchComponents() {
@@ -138,6 +139,14 @@ class App extends React.Component {
                 failures: true,
                 modes: true,
             },
+            pages: {
+                components: 0,
+                failures: 0,
+                modes: 0,
+            },
+            numberOfPages: 0,
+            displayLRange: 0,
+            displayRRange: 0,
             displayData: [],
             deleteModalShown: false,
             deleteModalText: '',
@@ -205,25 +214,37 @@ class App extends React.Component {
         }
     }
 
-    recomputeData(selectedState = this.state.currentSelectedMenuItem, sortedColumn = this.state.sortedColumn[selectedState], sortMethodAscending = this.state.sortMethodAscending[selectedState], searchContents = this.state.searchContents, isInSearch = this.state.isInSearch, searchColumn = this.state.searchColumn[this.state.currentSelectedMenuItem]) {
+    recomputeData(selectedState = this.state.currentSelectedMenuItem, sortedColumn = this.state.sortedColumn[selectedState], sortMethodAscending = this.state.sortMethodAscending[selectedState], searchContents = this.state.searchContents, isInSearch = this.state.isInSearch, searchColumn = this.state.searchColumn[this.state.currentSelectedMenuItem], currentPage = null) {
         this.selectionAnchor = -1;
         this.selectionLastAction = '';
         console.log('Recomputing display data');
         let accompanyingSelectionData = [];
+        let accompanyingLRange;
+        let accompanyingRRange;
         switch (selectedState) {
         case 'components':
             accompanyingSelectionData = this.componentSelections;
+            accompanyingLRange=this.state.pages.components;
             break;
         case 'failures':
             accompanyingSelectionData = this.failuresSelections;
+            accompanyingLRange=this.state.pages.failures;
             break;
         case 'modes':
             accompanyingSelectionData = this.modesSelections;
+            accompanyingLRange=this.state.pages.modes;
             break;
         default:
             console.log(`Unknown selected state (${selectedState})`);
         }
+        if (currentPage !== null) {
+            accompanyingLRange=currentPage;
+        }
         let displayData = this.getRawData(selectedState).slice();
+        let totalPages = Math.floor(displayData.length / globals.eachPage);
+        accompanyingLRange = Math.min(accompanyingLRange, totalPages);
+        accompanyingLRange*=globals.eachPage;
+        accompanyingRRange=Math.min(accompanyingLRange+globals.eachPage, displayData.length);
         for (let i = 0; i < displayData.length; i++) {
             displayData[i].num = i + 1;
             displayData[i].selected = accompanyingSelectionData[i];
@@ -280,6 +301,9 @@ class App extends React.Component {
         this.setState({
             displayData: displayData,
             dataLength: displayData.length,
+            displayLRange: accompanyingLRange,
+            displayRRange: accompanyingRRange,
+            numberOfPages: displayData.length === 0 ? 0 : Math.floor(displayData.length/globals.eachPage)+1,
         });
         return null;
     }
@@ -942,6 +966,8 @@ class App extends React.Component {
                     </div>
                     <MainTable
                         displayData={this.state.displayData}
+                        displayLRange={this.state.displayLRange}
+                        displayRRange={this.state.displayRRange}
                         sortedColumn={this.state.sortedColumn[this.state.currentSelectedMenuItem]}
                         sortMethodAscending={this.state.sortMethodAscending[this.state.currentSelectedMenuItem]}
                         tableType={this.state.currentSelectedMenuItem}
@@ -978,6 +1004,18 @@ class App extends React.Component {
                         }}
                         isInSearch={this.state.isInSearch}
                         searchColumn={this.state.searchColumn[this.state.currentSelectedMenuItem]}
+                    />
+                    <Pager
+                        pages={this.state.numberOfPages}
+                        currentPage={this.state.pages[this.state.currentSelectedMenuItem]+1}
+                        setPage={(page) => {
+                            let newPages={ ...this.state.pages };
+                            newPages[this.state.currentSelectedMenuItem]=page-1;
+                            this.setState({
+                                pages: newPages,
+                            });
+                            this.recomputeData(undefined, undefined, undefined, undefined, undefined, undefined, page-1);
+                        }}
                     />
                 </div>
             </div>

@@ -108,12 +108,14 @@ TableRow.propTypes = {
 
 export default function MainTable(props) {
     const tableData = props.displayData;
+    const { displayLRange } = props;
+    const { displayRRange } = props;
     const dataPrototype = props.tableDataPrototype;
-    let tableElements = Array(Math.max(tableData.length * 2 - 1, 0));
+    let tableElements = Array(Math.max((displayRRange-displayLRange) * 2 - 1, 0));
     if (tableData.length > 0) {
         const tableMultiples = dataPrototype.getData().length;
         const tableIds = dataPrototype.constructor.getIds;
-        for (let i = 0; i < tableData.length; i++) {
+        for (let i = displayLRange; i < Math.min(displayRRange, tableData.length); i++) {
             tableElements[2 * i] = (
                 <TableRow
                     rowIds={tableIds}
@@ -128,7 +130,7 @@ export default function MainTable(props) {
                     processClick={props.processClick}
                 />
             );
-            if (i !== tableData.length - 1) {
+            if (i !== Math.min(displayRRange, tableData.length) - 1) {
                 tableElements[2 * i + 1] = <TableSeparator multiples={tableMultiples + 3} key={`tableSeparator${tableData[i].dbid}`} />;
             }
         }
@@ -158,6 +160,8 @@ export default function MainTable(props) {
 
 MainTable.propTypes = {
     displayData: PropTypes.arrayOf(PropTypes.object).isRequired,
+    displayLRange: PropTypes.number.isRequired,
+    displayRRange: PropTypes.number.isRequired,
     tableDataPrototype: PropTypes.object.isRequired,
     tableType: PropTypes.string.isRequired,
     processClick: PropTypes.func.isRequired,

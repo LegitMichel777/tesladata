@@ -1,0 +1,57 @@
+#pager-master {
+    display: flex;
+    font-size: 24px;
+    font-weight: 600;
+    align-items: center;
+    margin-bottom: 30px;
+}
+#pager-currentPageDisplay {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+#pager-input {
+    height: 47px;
+    width: 94px;
+    border: 0;
+    margin: 0 16px;
+    padding: 0 15px;
+    box-sizing: border-box;
+    outline: 0;
+    background-color: var(--float);
+    border-radius: 13px;
+    font-size: 22px;
+    font-weight: 600;
+    text-align: center;
+}
+.pager-adjust-icon {
+    width: 30px;
+    height: 30px;
+}
+.pager-adjust-buttons {
+    width: 42px;
+    height: 42px;
+    border-radius: 21px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#pager-adjust {
+    display: flex;
+    width: 98px;
+    justify-content: space-between;
+    margin-left: 30px;
+}
+.pager-adjust-buttons-disabled {
+    background-color: var(--topMenuButtonDisabled);
+}
+.pager-adjust-icon-disabled {
+    opacity: 0.29;
+}
+.pager-adjust-buttons-enabled {
+    background-color: var(--float);
+    cursor: pointer;
+}
+.pager-adjust-buttons-enabled:hover {
+    background-color: var(--topMenuButtonHover);
+}

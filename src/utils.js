@@ -9,6 +9,8 @@ import Delete from './icons/delete.svg';
 import Edit from './icons/edit.svg';
 import Checkmark from './icons/checkmark.svg';
 import Xmark from './icons/xmark.svg';
+import LeftArrow from './icons/arrowleft.svg';
+import RightArrow from './icons/arrowright.svg';
 
 import ComponentIconDark from './icons/components-dark.svg';
 import FailureIconDark from './icons/failures-dark.svg';
@@ -21,6 +23,8 @@ import DeleteDark from './icons/delete-dark.svg';
 import EditDark from './icons/edit-dark.svg';
 import CheckmarkDark from './icons/checkmark-dark.svg';
 import XmarkDark from './icons/xmark-dark.svg';
+import LeftArrowDark from './icons/arrowleft-dark.svg';
+import RightArrowDark from './icons/arrowright-dark.svg';
 
 export function getDisplayName(menuItem) {
     switch (menuItem) {
@@ -108,6 +112,16 @@ export function getIcon(name) {
             return XmarkDark;
         }
         return Xmark;
+    case 'LeftArrow':
+        if (isDarkTheme) {
+            return LeftArrowDark;
+        }
+        return LeftArrow;
+    case 'RightArrow':
+        if (isDarkTheme) {
+            return RightArrowDark;
+        }
+        return RightArrow;
     case '':
         return undefined;
     default:
